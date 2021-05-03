@@ -53,7 +53,7 @@ letdig  {letra}|{digito}
 "!="                    {return DESIGUAL;}
 [-+=*/%<>!.]            {return yytext[0];}
 [;:,(){}[\]]            {return yytext[0];}
-\n                      {numlin++; return yytext[0];/* continua leyendo */} 
+\n                      {numlin++; return yytext[0];} 
 [ \t]                           {}
 "//".*                          {}
 "/*"([^*]|(\*+[^*/]))*\*+"/"    {}
