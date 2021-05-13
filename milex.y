@@ -101,9 +101,9 @@ sentencia:
   | error               {printf("en sentencia\n");}
   ;
 
+sentbloq: sentencia | '{' bloque '}' ;
+
 expresion:
-    aritmetico            {/*printf("%f\n", $1);*/}
-  | condicion             {/*printf("%s\n", $1 == 0 ? "false" : "true");*/}
   | asignacion            {}
   | declaracion           {/*printf("%f\n", $1);*/}
   | error                 {printf("en expresion\n");}
@@ -139,30 +139,6 @@ condicion:
   | '(' condicion ')'               {/*$$ = $2;*/}
   | LOGICO                          {/*$$ = $1;*/}
   | IDENTIF
-  ;
-
-asignacion:
-    IDENTIF '=' aritmetico            {}
-  | IDENTIF '=' condicion             {}
-  | IDENTIF '=' string                {/*printf("%s\n", $1);*/}
-  | IDENTIF '=' array                 {}
-  | IDENTIF '=' '{' struct-bloque '}' {}
-  | IDENTIF '=' IDENTIF
-  ;
-
-declaracion:
-    INT IDENTIF '=' aritmetico                {/*$$ = (int) $4;*/}
-  | FLOAT IDENTIF '=' aritmetico              {}
-  | BOOL IDENTIF '=' condicion                {}
-  | STRING IDENTIF '=' string                 {}
-  | ARRAY IDENTIF '=' array                   {}
-  | STRUCT IDENTIF '=' '{' struct-bloque '}'  {}
-  | INT IDENTIF '=' IDENTIF
-  | FLOAT IDENTIF '=' IDENTIF
-  | BOOL IDENTIF '=' IDENTIF
-  | STRING IDENTIF '=' IDENTIF
-  | ARRAY IDENTIF '=' IDENTIF
-  | STRUCT IDENTIF '=' IDENTIF
   ;
 
 string:
@@ -213,13 +189,26 @@ iterable:
   | aritmetico                {}
   ;
 
+asignacion:
+    IDENTIF '=' aritmetico            {}
+  | IDENTIF '=' condicion             {}
+  | IDENTIF '=' string                {/*printf("%s\n", $1);*/}
+  | IDENTIF '=' array                 {}
+  | IDENTIF '=' '{' struct-bloque '}' {}
+  ;
+
+declaracion:
+    INT IDENTIF '=' aritmetico                {/*$$ = (int) $4;*/}
+  | FLOAT IDENTIF '=' aritmetico              {}
+  | BOOL IDENTIF '=' condicion                {}
+  | STRING IDENTIF '=' string                 {}
+  | ARRAY IDENTIF '=' array                   {}
+  | STRUCT IDENTIF '=' '{' struct-bloque '}'  {}
+  ;
+
 if:
-    IF '(' condicion ')' sentencia
-  | IF '(' condicion ')' '{' bloque '}'
-  | IF '(' condicion ')' sentencia ELSE sentencia
-  | IF '(' condicion ')' '{' bloque '}' ELSE sentencia
-  | IF '(' condicion ')' sentencia ELSE '{' bloque '}'
-  | IF '(' condicion ')' '{' bloque '}' ELSE '{' bloque '}'
+    IF '(' condicion ')' sentbloq
+  | IF '(' condicion ')' sentbloq ELSE sentbloq
   ;
 
 switch:
@@ -247,8 +236,7 @@ switch-case:
   ;
 
 for: 
-    FOR '(' for-inicial ';' for-condicion ';' for-final ')' sentencia
-  | FOR '(' for-inicial ';' for-condicion ';' for-final ')' '{' bloque '}'
+    FOR '(' for-inicial ';' for-condicion ';' for-final ')' sentbloq
   ;
 
 for-inicial:
@@ -265,15 +253,12 @@ for-final:
   ;
 
 for-in:
-    FOR '(' IDENTIF IN array ')' sentencia
-  | FOR '(' IDENTIF IN array ')' '{' bloque '}'
-  | FOR '(' IDENTIF IN IDENTIF ')' sentencia
-  | FOR '(' IDENTIF IN IDENTIF ')' '{' bloque '}'
+    FOR '(' IDENTIF IN array ')' sentbloq
+  | FOR '(' IDENTIF IN IDENTIF ')' sentbloq
   ;
 
 while:
-    WHILE '(' condicion ')' sentencia
-  | WHILE '(' condicion ')' '{' bloque '}'
+    WHILE '(' condicion ')' sentbloq
   ;
 
 print:
@@ -304,6 +289,11 @@ params-uso:
   | IDENTIF ',' params-uso
   ;
 
+tipo: 
+    INT
+  | FLOAT
+;
+
 funcion-declaracion:
     tipo IDENTIF '(' ')' '{' bloque '}'
   | tipo IDENTIF '(' params-declaracion ')' '{' bloque '}'
@@ -315,16 +305,6 @@ params-declaracion:
   | tipo IDENTIF
   | tipo IDENTIF final-bloque
   | tipo IDENTIF ',' params-declaracion
-  ;
-
-tipo:
-    INT
-  | FLOAT
-  | BOOL
-  | STRING
-  | STRUCT
-  | VOID
-  | ARRAY
   ;
 %%
 
