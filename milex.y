@@ -104,7 +104,7 @@ sentencia:
 sentbloq: sentencia | '{' bloque '}' ;
 
 expresion:
-  | asignacion            {}
+    asignacion            {}
   | declaracion           {/*printf("%f\n", $1);*/}
   | error                 {printf("en expresion\n");}
   ;
@@ -168,13 +168,13 @@ struct-bloque:
     '\n'
   | '\n' struct-bloque
   | struct-elem
-  | struct-elem final-bloque
+  | struct-elem espacio-vacio
   | struct-elem ',' struct-bloque  {}
   ;
 
-final-bloque:
+espacio-vacio:
     '\n'
-  | '\n' final-bloque
+  | '\n' espacio-vacio
   ;
 
 struct-elem:
@@ -189,21 +189,30 @@ iterable:
   | aritmetico                {}
   ;
 
+tipo: 
+    INT
+  | FLOAT
+  | BOOL
+  | STRING
+  | ARRAY
+  | STRUCT
+  | VOID
+;
+
 asignacion:
-    IDENTIF '=' aritmetico            {}
-  | IDENTIF '=' condicion             {}
-  | IDENTIF '=' string                {/*printf("%s\n", $1);*/}
-  | IDENTIF '=' array                 {}
-  | IDENTIF '=' '{' struct-bloque '}' {}
+    IDENTIF '=' aritmetico      {}
+  | IDENTIF '=' condicion       {}
+  | IDENTIF '=' string          {/*printf("%s\n", $1);*/}
+  | IDENTIF '=' array           {}
+  | IDENTIF '=' '{' struct-bloque '}'   {}
   ;
 
 declaracion:
-    INT IDENTIF '=' aritmetico                {/*$$ = (int) $4;*/}
-  | FLOAT IDENTIF '=' aritmetico              {}
-  | BOOL IDENTIF '=' condicion                {}
-  | STRING IDENTIF '=' string                 {}
-  | ARRAY IDENTIF '=' array                   {}
-  | STRUCT IDENTIF '=' '{' struct-bloque '}'  {}
+    tipo IDENTIF '=' aritmetico     {/*$$ = (int) $4;*/}
+  | tipo IDENTIF '=' condicion      {}
+  | tipo IDENTIF '=' string         {}
+  | tipo IDENTIF '=' array          {}
+  | tipo IDENTIF '=' '{' struct-bloque '}'  {}
   ;
 
 if:
@@ -212,25 +221,17 @@ if:
   ;
 
 switch:
-    SWITCH '(' aritmetico ')' '{' switch-first-case '}'       {}
-  | SWITCH '(' string ')' '{' switch-first-case '}'     {}
-  ;
-
-switch-first-case:
-    '\n' switch-first-case
-  | switch-case switch-bloque
-  | switch-case switch-bloque BREAK
+    SWITCH '(' aritmetico ')' '{' espacio-vacio switch-bloque '}'       {}
+  | SWITCH '(' string ')' '{' espacio-vacio switch-bloque '}'     {}
   ;
 
 switch-bloque:
-    '\n'
-  | '\n' switch-bloque
+    switch-case
   | switch-case switch-bloque
-  | switch-case switch-bloque BREAK
   ;
 
 switch-case:
-    CASE aritmetico ':' bloque
+    CASE aritmetico ':' bloque  {/* se pueden identificadores?? */}
   | CASE string ':' bloque
   | DEFAULT ':' bloque
   ;
@@ -285,14 +286,9 @@ params-uso:
     '\n'
   | '\n' params-uso
   | IDENTIF
-  | IDENTIF final-bloque
+  | IDENTIF espacio-vacio
   | IDENTIF ',' params-uso
   ;
-
-tipo: 
-    INT
-  | FLOAT
-;
 
 funcion-declaracion:
     tipo IDENTIF '(' ')' '{' bloque '}'
@@ -303,7 +299,7 @@ params-declaracion:
     '\n'
   | '\n' params-declaracion
   | tipo IDENTIF
-  | tipo IDENTIF final-bloque
+  | tipo IDENTIF espacio-vacio
   | tipo IDENTIF ',' params-declaracion
   ;
 %%
