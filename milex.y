@@ -200,19 +200,19 @@ tipo:
 ;
 
 asignacion:
-    IDENTIF '=' aritmetico      {}
-  | IDENTIF '=' condicion       {}
-  | IDENTIF '=' string          {/*printf("%s\n", $1);*/}
-  | IDENTIF '=' array           {}
-  | IDENTIF '=' '{' struct-bloque '}'   {}
+    IDENTIF asignables      
   ;
 
+asignables:
+    '=' aritmetico
+  | '=' condicion
+  | '=' string            {/*printf("%s\n", $1);*/}
+  | '=' array
+  | '=' '{' struct-bloque '}'
+
 declaracion:
-    tipo IDENTIF '=' aritmetico     {/*$$ = (int) $4;*/}
-  | tipo IDENTIF '=' condicion      {}
-  | tipo IDENTIF '=' string         {}
-  | tipo IDENTIF '=' array          {}
-  | tipo IDENTIF '=' '{' struct-bloque '}'  {}
+    tipo asignacion     
+  | tipo IDENTIF
   ;
 
 if:
