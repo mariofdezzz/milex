@@ -6,12 +6,28 @@
 // #include <iostream>
 #include <string.h>
 
+#include "ts.h"
+
 extern FILE *yyin;   /* declarado en lexico */
 extern int numlin;   /* lexico le da valores */
 int yydebug=1;       /* modo debug si -t */
 void yyerror(char*); 
 
 double resto(double a, double b);
+
+enum categ gl = varg;
+
+struct reg *voidp;
+
+void inits() {
+  ins("void", tipo, NULL);
+  voidp = top;
+  ins("float", tipo, NULL);
+  ins("int", tipo, NULL);
+  ins("bool", tipo, NULL);
+  ins("string", tipo, NULL);
+  ins("struct", tipo, NULL);
+}
 %}
 
 %union { 
@@ -19,12 +35,13 @@ double resto(double a, double b);
   int entero;
   double* array;
   char* symbol;
+  char* id;
 }
 %token <entero> ENTERO
 %token <real> REAL
 %token <entero> LOGICO
 %token <symbol> CADENA
-%token <symbol> IDENTIF
+%token <id> IDENTIF
 
 %token <symbol> INT
 %token <symbol> FLOAT
@@ -67,6 +84,7 @@ double resto(double a, double b);
 // %type <symbol> string
 // %type <array> iterable
 // %type <array> array
+%type <symbol> tipo
 
 /* Precedencia */
 %left AND OR
@@ -123,7 +141,7 @@ aritmetico:
   | array '.' IDENTIF               {/*if(strcmp($3, "length") != 0) yyerror("Propiedad inesperada\n");*/}
   | REAL                            {/*$$ = $1;*/}
   | ENTERO                          {/*$$ = $1;*/}
-  | IDENTIF
+  | IDENTIF                         { if (buscat($1, varg)==NULL && buscat($1,varl)==NULL) yyerror("5: variable no declarada"); }
   ;
 
 condicion:
@@ -138,7 +156,7 @@ condicion:
   | '!' condicion                   {/*$$ = ++$2 % 2;*/}
   | '(' condicion ')'               {/*$$ = $2;*/}
   | LOGICO                          {/*$$ = $1;*/}
-  | IDENTIF
+  | IDENTIF                         { if (buscat($1, varg)==NULL && buscat($1,varl)==NULL) yyerror("5: variable no declarada"); }
   ;
 
 string:
@@ -150,7 +168,7 @@ string:
   | condicion '+' string
   | array '+' string
   | CADENA              {}
-  | IDENTIF
+  | IDENTIF                 { if (buscat($1, varg)==NULL && buscat($1,varl)==NULL) yyerror("5: variable no declarada"); }
   ;
 
 array: 
@@ -161,7 +179,7 @@ array:
   | NEW FLOAT '[' ENTERO ']'
   | NEW BOOL '[' ENTERO ']'
   | NEW STRING '[' ENTERO ']'
-  | IDENTIF
+  | IDENTIF                  { if (buscat($1, varg)==NULL && buscat($1,varl)==NULL) yyerror("5: variable no declarada"); }
   ;
 
 struct-bloque:
@@ -190,17 +208,17 @@ iterable:
   ;
 
 tipo: 
-    INT
-  | FLOAT
-  | BOOL
-  | STRING
-  | ARRAY
-  | STRUCT
-  | VOID
+    INT     {$$ = $1;}
+  | FLOAT   {$$ = $1;}
+  | BOOL    {$$ = $1;}
+  | STRING  {$$ = $1;}
+  | ARRAY   {$$ = $1;}
+  | STRUCT  {$$ = $1;}
+  | VOID    {$$ = $1;}
 ;
 
 asignacion:
-    IDENTIF asignables      
+    IDENTIF asignables      { if (buscat($1, varg)==NULL && buscat($1,varl)==NULL) yyerror("3: variable no declarada"); }
   ;
 
 asignables:
@@ -209,10 +227,19 @@ asignables:
   | '=' string            {/*printf("%s\n", $1);*/}
   | '=' array
   | '=' '{' struct-bloque '}'
+  ;
 
 declaracion:
-    tipo asignacion     
-  | tipo IDENTIF
+    tipo IDENTIF declarables     { struct reg *t = buscat($1, tipo); if (t!=NULL && t!=voidp) ins($2, gl, t); else yyerror("1: tipo inexistente"); }
+  | tipo IDENTIF                 { struct reg *t = buscat($1, tipo); if (t!=NULL && t!=voidp) ins($2, gl, t); else yyerror("1: tipo inexistente"); }
+  ;
+
+declarables:
+    '=' aritmetico
+  | '=' condicion
+  | '=' string            {/*printf("%s\n", $1);*/}
+  | '=' array
+  | '=' '{' struct-bloque '}'
   ;
 
 if:
@@ -278,8 +305,8 @@ print-expresion:
   ;
 
 funcion-uso: 
-    IDENTIF '(' ')'
-  | IDENTIF '(' params-uso ')'
+    IDENTIF '(' ')'             { if (buscat($1, rut)==NULL) yyerror("4: rutina no declarada"); }
+  | IDENTIF '(' params-uso ')'  { if (buscat($1, rut)==NULL) yyerror("4: rutina no declarada"); }
   ;
 
 params-uso:
@@ -291,8 +318,8 @@ params-uso:
   ;
 
 funcion-declaracion:
-    tipo IDENTIF '(' ')' '{' bloque '}'
-  | tipo IDENTIF '(' params-declaracion ')' '{' bloque '}'
+    tipo IDENTIF '(' ')' '{' { struct reg *t = buscat($1, tipo); if (t!=NULL) ins($2, rut, t); else yyerror("2: tipo inexistente"); gl=varl; } bloque '}' { dump($2); finbloq(); gl=varg; }
+  | tipo IDENTIF '(' params-declaracion ')' '{' { struct reg *t = buscat($1, tipo); if (t!=NULL) ins($2, rut, t); else yyerror("2: tipo inexistente"); gl=varl; } bloque '}' { dump($2); finbloq(); gl=varg; }
   ;
 
 params-declaracion:
@@ -306,11 +333,18 @@ params-declaracion:
 
 int main(int argc, char** argv) {
   if (argc>1) yyin=fopen(argv[1],"r");
+  inits();
+  dump("t.s. inicial");
   yyparse();
+  dump("t.s. final");
 }
 
 void yyerror(char* mens) {
-  printf("Error en linea %i: %s ", numlin, mens);
+  //yydebug = 1;
+  dump("ERROR");
+  // fprintf (stderr, "%s\n", s);
+  printf("Error en linea %i: %s \n", numlin, mens);
+  if (strcmp(mens, "syntax error")==0) exit(1);
 }
 
 void yywrap() {}
