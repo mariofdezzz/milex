@@ -149,7 +149,13 @@ aritmetico:
   | array '.' IDENTIF               {/*if(strcmp($3, "length") != 0) yyerror("Propiedad inesperada\n");*/}
   | REAL                            {/*$$ = $1;*/}
   | ENTERO                          {/*$$.reg = NumeroRegistro;*/}
-  | IDENTIF                         { if (buscat($1, varg)==NULL && buscat($1,varl)==NULL) yyerror("5: variable no declarada"); }
+  | IDENTIF
+    { 
+      if ( 
+        buscat($1, varg) == NULL && 
+        buscat($1, varl)==NULL
+      ) yyerror("5: variable no declarada"); 
+    }
   ;
 
 condicion:
@@ -164,7 +170,13 @@ condicion:
   | '!' condicion                   {/*$$ = ++$2 % 2;*/}
   | '(' condicion ')'               {/*$$ = $2;*/}
   | LOGICO                          {/*$$ = $1;*/}
-  | IDENTIF                         { if (buscat($1, varg)==NULL && buscat($1,varl)==NULL) yyerror("5: variable no declarada"); }
+  | IDENTIF
+      { 
+        if (
+          buscat($1, varg) == NULL && 
+          buscat($1, varl)==NULL
+        ) yyerror("5: variable no declarada"); 
+      }
   ;
 
 string:
@@ -176,7 +188,13 @@ string:
   | condicion '+' string
   | array '+' string
   | CADENA              {}
-  | IDENTIF                 { if (buscat($1, varg)==NULL && buscat($1,varl)==NULL) yyerror("5: variable no declarada"); }
+  | IDENTIF
+      { 
+        if (
+          buscat($1, varg) == NULL && 
+          buscat($1, varl)==NULL
+        ) yyerror("5: variable no declarada"); 
+      }
   ;
 
 array: 
@@ -187,7 +205,13 @@ array:
   | NEW FLOAT '[' ENTERO ']'
   | NEW BOOL '[' ENTERO ']'
   | NEW STRING '[' ENTERO ']'
-  | IDENTIF                  { if (buscat($1, varg)==NULL && buscat($1,varl)==NULL) yyerror("5: variable no declarada"); }
+  | IDENTIF
+      { 
+        if (
+          buscat($1, varg) == NULL && 
+          buscat($1, varl)==NULL
+        ) yyerror("5: variable no declarada"); 
+      }
   ;
 
 struct-bloque:
@@ -226,7 +250,13 @@ tipo:
 ;
 
 asignacion:
-    IDENTIF asignables      { if (buscat($1, varg)==NULL && buscat($1,varl)==NULL) yyerror("3: variable no declarada"); }
+    IDENTIF asignables      
+      { 
+        if (
+          buscat($1, varg)==NULL && 
+          buscat($1, varl)==NULL
+        ) yyerror("3: variable no declarada"); 
+      }
   ;
 
 asignables:
@@ -238,8 +268,18 @@ asignables:
   ;
 
 declaracion:
-    tipo IDENTIF declarables     { struct reg *t = buscat($1, tipo); if (t!=NULL && t!=voidp) ins($2, gl, t); else yyerror("1: tipo inexistente"); }
-  | tipo IDENTIF                 { struct reg *t = buscat($1, tipo); if (t!=NULL && t!=voidp) ins($2, gl, t); else yyerror("1: tipo inexistente"); }
+    tipo IDENTIF declarables
+      {
+        struct reg *t = buscat($1, tipo);
+        if (t!=NULL && t!=voidp) ins($2, gl, t);
+        else yyerror("1: tipo inexistente");
+      }
+  | tipo IDENTIF
+      {
+        struct reg *t = buscat($1, tipo);
+        if (t!=NULL && t!=voidp) ins($2, gl, t);
+        else yyerror("1: tipo inexistente");
+      }
   ;
 
 declarables:
@@ -312,8 +352,14 @@ print-expresion:
   ;
 
 funcion-uso: 
-    IDENTIF '(' ')'             { if (buscat($1, rut)==NULL) yyerror("4: rutina no declarada"); }
-  | IDENTIF '(' params-uso ')'  { if (buscat($1, rut)==NULL) yyerror("4: rutina no declarada"); }
+    IDENTIF '(' ')'
+      {
+        if (buscat($1, rut) == NULL) yyerror("4: rutina no declarada");
+      }
+  | IDENTIF '(' params-uso ')'
+      {
+        if (buscat($1, rut) == NULL) yyerror("4: rutina no declarada");
+      }
   ;
 
 params-uso:
@@ -325,8 +371,32 @@ params-uso:
   ;
 
 funcion-declaracion:
-    tipo IDENTIF '(' ')' '{' { struct reg *t = buscat($1, tipo); if (t!=NULL) ins($2, rut, t); else yyerror("2: tipo inexistente"); gl=varl; } bloque '}' { dump($2); finbloq(); gl=varg; }
-  | tipo IDENTIF '(' params-declaracion ')' '{' { struct reg *t = buscat($1, tipo); if (t!=NULL) ins($2, rut, t); else yyerror("2: tipo inexistente"); gl=varl; } bloque '}' { dump($2); finbloq(); gl=varg; }
+    tipo IDENTIF '(' ')' '{'
+      {
+        struct reg *t = buscat($1, tipo);
+        if (t!=NULL) ins($2, rut, t);
+        else yyerror("2: tipo inexistente");
+        gl=varl;
+      } 
+    bloque '}' 
+      {
+        dump($2);
+        finbloq();
+        gl=varg;
+      }
+  | tipo IDENTIF '(' params-declaracion ')' '{'
+      {
+        struct reg *t = buscat($1, tipo);
+        if (t!=NULL) ins($2, rut, t);
+        else yyerror("2: tipo inexistente");
+        gl=varl;
+      } 
+    bloque '}' 
+      {
+        dump($2);
+        finbloq();
+        gl=varg;
+      }
   ;
 
 params-declaracion:
