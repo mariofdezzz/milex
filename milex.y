@@ -36,6 +36,11 @@ void inits() {
   double* array;
   char* symbol;
   char* id;
+
+  struct {
+    char* tipo;
+    int reg;
+  } exp;
 }
 %token <entero> ENTERO
 %token <real> REAL
@@ -79,7 +84,7 @@ void inits() {
 
 // %type <real> asignacion
 // %type <real> declaracion
-// %type <real> aritmetico
+%type <exp> aritmetico
 // %type <entero> condicion
 // %type <symbol> string
 // %type <array> iterable
@@ -93,6 +98,7 @@ void inits() {
 %left '*' '/' '%'
 %right POTENCIA
 %left '!' INCREMENTO DECREMENTO
+%left '.' // array + array.length
 
 %%
 bloque:
@@ -100,6 +106,10 @@ bloque:
   | '\n' bloque       {}
   | sentencia         {}
   | sentencia bloque  {}
+  | RETURN            {/*No admite salto de linea*/}
+  | RETURN '\n' bloque
+  | RETURN expresion
+  | RETURN expresion '\n' bloque
   ;
 
 sentencia:
@@ -114,8 +124,6 @@ sentencia:
   | funcion-declaracion {}
   | BREAK               {}
   | CONTINUE            {}
-  | RETURN              {}
-  | RETURN expresion    {}
   | error               {printf("en sentencia\n");}
   ;
 
@@ -137,10 +145,10 @@ aritmetico:
   | '-' aritmetico                  {/*$$ = -$2;*/}
   | aritmetico INCREMENTO           {/*$$ = $1 + 1;*/}
   | aritmetico DECREMENTO           {/*$$ = $1 - 1;*/}
-  | '(' aritmetico ')'              {/*$$ = $2;*/}
+  | '(' aritmetico ')'              {/*$$ = $2; copia el struct*/}
   | array '.' IDENTIF               {/*if(strcmp($3, "length") != 0) yyerror("Propiedad inesperada\n");*/}
   | REAL                            {/*$$ = $1;*/}
-  | ENTERO                          {/*$$ = $1;*/}
+  | ENTERO                          {/*$$.reg = NumeroRegistro;*/}
   | IDENTIF                         { if (buscat($1, varg)==NULL && buscat($1,varl)==NULL) yyerror("5: variable no declarada"); }
   ;
 
@@ -282,7 +290,6 @@ for-final:
 
 for-in:
     FOR '(' IDENTIF IN array ')' sentbloq
-  | FOR '(' IDENTIF IN IDENTIF ')' sentbloq
   ;
 
 while:

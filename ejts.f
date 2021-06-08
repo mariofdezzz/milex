@@ -6,9 +6,7 @@ void f (int d) {
 	string j
  	bool y
  	x = j - y
- 	i=10 
-
-
+ 	i = 10
 }
 
 int n
