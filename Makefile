@@ -4,6 +4,9 @@ F=tests/ejts.f
 all: dist/milex $(F)
 	./dist/milex $(F) 2>/dev/null
 
+debug: dist/milex $(F)
+	./dist/milex $(F) 2>dist/output
+
 clean:
 	rm -f dist/*
 
