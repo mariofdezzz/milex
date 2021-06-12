@@ -6,7 +6,7 @@
 // #include <iostream>
 #include <string.h>
 
-#include "ts.h"
+#include "../libraries/ts.h"
 
 extern FILE *yyin;   /* declarado en lexico */
 extern int numlin;   /* lexico le da valores */
