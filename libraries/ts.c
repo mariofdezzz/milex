@@ -10,21 +10,47 @@ struct reg * top = NULL;
 
 struct reg *busq(char *id) {
   struct reg *p = top;
-  while (p!=NULL && strcmp(p->id, id)!=0) p=p->sig;
+
+  while (p!=NULL && strcmp(p->id, id)!=0) 
+    p=p->sig;
+
   return p;
 }
 
 struct reg *buscat(char *id, enum categ cat) {
   struct reg *p = busq(id); 
-  if (p!=NULL && p->cat==cat) return p; else return NULL;
+
+  if (p!=NULL && p->cat==cat)
+    return p;
+  else 
+    return NULL;
 }
 
-void ins(char *id, enum categ cat, struct reg *tp) {
-  if (busq(id)!=NULL) yyerror("-1: nombre ya definido");
+struct reg *ins(char *id, enum categ cat) {
+  if (busq(id)!=NULL) 
+    yyerror("-1: nombre ya definido");
+
   struct reg *p = (struct reg *)malloc(sizeof(struct reg));
-  p->id=id; p->cat=cat; p->tip=tp;
+  p->id=id; 
+  p->cat=cat; 
   p->sig = top;
   top = p;
+
+  return p;
+}
+
+void inst(char *id, int tam) {
+  struct reg *p = ins(id, tipo);
+  p->tip=NULL;
+  p->tam=tam;
+}
+
+struct reg *insvr(char *id, enum categ cat, struct reg *tp, int dir) {
+  struct reg *p = ins(id, cat);
+  p->tip=tp;
+  p->dir=dir;
+
+  return p;
 }
 
 void finbloq() {
@@ -36,9 +62,20 @@ void finbloq() {
 
 void dump(const char* s) {
   printf("  DUMP: %s\n", s);
+  
   struct reg *p = top;
+
   while (p!=NULL) {
-    printf("0x%x %c %s %s\n", (int)p, inicat[p->cat], p->id, p->tip==NULL?"·":p->tip->id);
+    printf("0x%x %c %s", (int)p, inicat[p->cat], p->id);
+    
+    if (p->cat==tipo) 
+      printf(" %d\n", p->tam);
+    else {
+      printf(" %s", p->tip->id);
+      if (p->cat==varg) printf(" 0x%x\n", p->dir);
+      if (p->cat==varl) printf(" %d\n", p->dir);
+      if (p->cat==rut) printf(" L_%d\n", p->dir);
+    }
     p=p->sig;
   }
 }

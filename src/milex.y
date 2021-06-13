@@ -5,11 +5,14 @@
 // #include <stdbool.h>
 // #include <iostream>
 #include <string.h>
+#include <stddef.h>
 
 #include "../libraries/ts.h"
+#include "../libraries/Qlib.h"
 
 extern FILE *yyin;   /* declarado en lexico */
 extern int numlin;   /* lexico le da valores */
+extern char *linfte;
 int yydebug=1;       /* modo debug si -t */
 void yyerror(char*); 
 
@@ -17,17 +20,24 @@ double resto(double a, double b);
 
 enum categ gl = varg;
 
+int sm = 0x12000;
+int fm;
+int et = 0;
+
 struct reg *voidp;
 
 void inits() {
-  ins("void", tipo, NULL);
+  inst("void", 0);
   voidp = top;
-  ins("float", tipo, NULL);
-  ins("int", tipo, NULL);
-  ins("bool", tipo, NULL);
-  ins("string", tipo, NULL);
-  ins("struct", tipo, NULL);
+  inst("bool", 1);
+  inst("int", 4);
+  inst("float", 8);
+  // inst("string", 8);
+  // inst("struct", 8);
 }
+
+FILE *obj;
+
 %}
 
 %union { 
@@ -36,6 +46,7 @@ void inits() {
   double* array;
   char* symbol;
   char* id;
+  struct reg *rp;
 
   struct {
     char* tipo;
@@ -85,11 +96,14 @@ void inits() {
 // %type <real> asignacion
 // %type <real> declaracion
 %type <exp> aritmetico
+%type <exp> asignables
+%type <exp> declarables
 // %type <entero> condicion
 // %type <symbol> string
 // %type <array> iterable
 // %type <array> array
 %type <symbol> tipo
+// %type <rp> funcion-uso
 
 /* Precedencia */
 %left AND OR
@@ -147,7 +161,7 @@ aritmetico:
   | aritmetico DECREMENTO           {/*$$ = $1 - 1;*/}
   | '(' aritmetico ')'              {/*$$ = $2; copia el struct*/}
   | array '.' IDENTIF               {/*if(strcmp($3, "length") != 0) yyerror("Propiedad inesperada\n");*/}
-  | REAL                            {/*$$ = $1;*/}
+  | REAL                            {$$.reg = sm;/*$$ = $1;*/}
   | ENTERO                          {/*$$.reg = NumeroRegistro;*/}
   | IDENTIF
     { 
@@ -252,15 +266,25 @@ tipo:
 asignacion:
     IDENTIF asignables      
       { 
-        if (
-          buscat($1, varg)==NULL && 
-          buscat($1, varl)==NULL
-        ) yyerror("3: variable no declarada"); 
+        struct reg *p = buscat($1, varl);
+
+        if (p!=NULL) 
+          fprintf(obj, "\tR7=R7-4;\n\tR0=R6%d;\n\tP(R7)=R0;\n", p->dir);
+        else {
+          p = buscat($1,varg);
+
+          if (p!=NULL) 
+            fprintf(obj, "\tR7=R7-4;\n\tP(R7)=0x%x;\n", p->dir);
+          else 
+            yyerror("3: variable no declarada"); 
+        }
+
+        fprintf(obj, "\tR0=I(R7);\n\tR1=P(R7+4);\n\tI(R1)=R0;\n\tR7=R7+8;\n");
       }
   ;
 
 asignables:
-    '=' aritmetico
+    '=' aritmetico        {$$ = $2;}
   | '=' condicion
   | '=' string            {/*printf("%s\n", $1);*/}
   | '=' array
@@ -271,19 +295,41 @@ declaracion:
     tipo IDENTIF declarables
       {
         struct reg *t = buscat($1, tipo);
-        if (t!=NULL && t!=voidp) ins($2, gl, t);
+
+        int d;
+		    if (gl==varg) d = sm -= 8; // Cambiar !!!
+        else d = fm -= 8;  // Cambiar
+
+        if (t!=NULL && t!=voidp) {
+          struct reg *p = insvr($2, gl, t, d);
+		      if (gl==varl) { // variable local
+            fprintf(obj, "\tR7=R7-4;\n");
+            fprintf(obj, "\tR7=R7-4;\n\tR0=R6%d;\n\tP(R7)=R0;\n", p->dir); // revisar
+            fprintf(obj, "\tR0=I(R7);\n\tR1=P(R7+4);\n\tI(R1)=R0;\n\tR7=R7+8;\n");
+          }
+        }
         else yyerror("1: tipo inexistente");
       }
   | tipo IDENTIF
       {
         struct reg *t = buscat($1, tipo);
-        if (t!=NULL && t!=voidp) ins($2, gl, t);
+
+        int d;
+		    if (gl==varg) d = sm -= t->tam;
+        else d = fm -= t->tam;
+
+        if (t!=NULL && t!=voidp) {
+          insvr($2, gl, t, d);
+
+		      if (gl==varl) 
+            fprintf(obj, "\tR7=R7-4;\n");
+        }
         else yyerror("1: tipo inexistente");
       }
   ;
 
 declarables:
-    '=' aritmetico
+    '=' aritmetico        {$$ = $2;}
   | '=' condicion
   | '=' string            {/*printf("%s\n", $1);*/}
   | '=' array
@@ -373,9 +419,17 @@ params-uso:
 funcion-declaracion:
     tipo IDENTIF '(' ')' '{'
       {
-        struct reg *t = buscat($1, tipo);
-        if (t!=NULL) ins($2, rut, t);
-        else yyerror("2: tipo inexistente");
+        // struct reg *t = buscat($1, tipo);
+        $<rp>$ = buscat($1, tipo);
+
+        // if (t!=NULL) ins($2, rut, t);
+        if ($<rp>$==NULL) yyerror("2: tipo inexistente"); 
+        else {
+          struct reg *p = insvr($2, rut, $<rp>$, ++et); 
+          gl = varl;
+          fm = 0;
+          fprintf(obj, "L %d:\tR6=R7;\n", p->dir);
+        }
         gl=varl;
       } 
     bloque '}' 
@@ -385,10 +439,18 @@ funcion-declaracion:
         gl=varg;
       }
   | tipo IDENTIF '(' params-declaracion ')' '{'
-      {
-        struct reg *t = buscat($1, tipo);
-        if (t!=NULL) ins($2, rut, t);
-        else yyerror("2: tipo inexistente");
+      { 
+        // struct reg *t = buscat($1, tipo);
+        $<rp>$ = buscat($1, tipo);
+
+        // if (t!=NULL) ins($2, rut, t);
+        if ($<rp>$==NULL) yyerror("2: tipo inexistente"); 
+        else {
+          struct reg *p = insvr($2, rut, $<rp>$, ++et); 
+          gl = varl;
+          fm = 0;
+          fprintf(obj, "L %d:\tR6=R7;\n", p->dir);
+        }
         gl=varl;
       } 
     bloque '}' 
@@ -410,9 +472,13 @@ params-declaracion:
 
 int main(int argc, char** argv) {
   if (argc>1) yyin=fopen(argv[1],"r");
+  if (argc>2) obj=fopen(argv[2],"w");
   inits();
   dump("t.s. inicial");
+  fprintf(obj, "#include \"Q.h\"\nBEGIN\n");
   yyparse();
+  fprintf(obj, "END\n");
+  fclose(obj);
   dump("t.s. final");
 }
 
@@ -420,8 +486,10 @@ void yyerror(char* mens) {
   //yydebug = 1;
   dump("ERROR");
   // fprintf (stderr, "%s\n", s);
-  printf("Error en linea %i: %s \n", numlin, mens);
-  if (strcmp(mens, "syntax error")==0) exit(1);
+  //printf("Error en linea %i: %s \n", numlin, mens);
+  fprintf(obj, "\n!!! error %s (lin %d) !!!\n\n", mens, numlin);
+  fprintf(stderr, "Error %s (lin %d)\n", mens, numlin);
+  //if (strcmp(mens, "syntax error")==0) exit(1);
 }
 
 void yywrap() {}

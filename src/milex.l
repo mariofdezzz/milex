@@ -1,8 +1,12 @@
 %{
 #include "milex.tab.h"
 #include <stdio.h>
+#include <stdbool.h>
 
 int numlin = 1;
+extern FILE *obj; 
+char *linact;
+bool prlin = false;
 
 void cpystr() {
     yylval.symbol=(char*) malloc(sizeof(char) * (strlen(yytext) + 1));
@@ -15,7 +19,16 @@ digito  [0-9]
 letdig  {letra}|{digito}
 
 %option noyywrap
+%x LEELIN
 %%
+	if (numlin==1) BEGIN(LEELIN); 
+	if (prlin) { 
+        fprintf(obj, "\t\t\t// %d: %s\n", numlin, linact); 
+	    free(linact); 
+        prlin = false; 
+    }
+<LEELIN>^.*	{ linact = strdup(yytext); prlin = true; yyless(0); BEGIN(INITIAL); }
+<LEELIN>\n	++numlin;
 {digito}+               {yylval.entero=atoi(yytext); return ENTERO;}
 {digito}*"."{digito}+   {yylval.real=atof(yytext); return REAL;}
 {digito}+"."{digito}*   {yylval.real=atof(yytext); return REAL;}
@@ -55,10 +68,9 @@ letdig  {letra}|{digito}
 "!="                    {return DESIGUAL;}
 [-+=*/%<>!.]            {return yytext[0];}
 [;:,(){}[\]]            {return yytext[0];}
-\n                      {numlin++; return yytext[0];} 
+\n                      {numlin++; BEGIN(LEELIN); return yytext[0];} 
 [ \t]                           {}
 "//".*                          {}
 "/*"([^*]|(\*+[^*/]))*\*+"/"    {}
-.                       {yyerror("Error lexico");}
-<<EOF>>                 {return 0; /* por defecto */}
+.                       {printf("flex error: '%c'\n", yytext[0]);}
 %%
