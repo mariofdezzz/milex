@@ -8,7 +8,7 @@
 #include <stddef.h>
 
 #include "../libraries/ts.h"
-#include "../libraries/Qlib.h"
+#include "Qlib.h"
 
 extern FILE *yyin;   /* declarado en lexico */
 extern int numlin;   /* lexico le da valores */
