@@ -115,6 +115,22 @@ FILE *obj;
 %left '.' // array + array.length
 
 %%
+prog:
+    '\n'
+  | '\n' prog
+  | '{' 
+      {
+        fprintf(obj, "L 0:\tR7=0x%x;\n", sm);
+      }
+    bloque '}' 
+      {
+        fprintf(obj, "\tGT(-2);\n");
+      }
+    prog
+  | funcion-declaracion prog
+  | declaracion prog
+  ;
+
 bloque:
     '\n'              {}
   | '\n' bloque       {}
@@ -162,7 +178,11 @@ aritmetico:
   | '(' aritmetico ')'              {/*$$ = $2; copia el struct*/}
   | array '.' IDENTIF               {/*if(strcmp($3, "length") != 0) yyerror("Propiedad inesperada\n");*/}
   | REAL                            {$$.reg = sm;/*$$ = $1;*/}
-  | ENTERO                          {/*$$.reg = NumeroRegistro;*/}
+  | ENTERO
+    { 
+      fprintf(obj, "\tR7=R7-4;\n\tI(R7)=%d;\n", $1); 
+      // $$.reg = NumeroRegistro;
+    }
   | IDENTIF
     { 
       if ( 
@@ -297,8 +317,8 @@ declaracion:
         struct reg *t = buscat($1, tipo);
 
         int d;
-		    if (gl==varg) d = sm -= 8; // Cambiar !!!
-        else d = fm -= 8;  // Cambiar
+		    if (gl==varg) d = sm -= t->tam;
+        else d = fm -= t->tam;
 
         if (t!=NULL && t!=voidp) {
           struct reg *p = insvr($2, gl, t, d);
@@ -437,6 +457,7 @@ funcion-declaracion:
         dump($2);
         finbloq();
         gl=varg;
+        // fprintf(obj, "\tR7=R6;\n\tR6=P(R7+4);\n\tR5=P(R7);\n\tGT(R5);\n");
       }
   | tipo IDENTIF '(' params-declaracion ')' '{'
       { 

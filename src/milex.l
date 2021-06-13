@@ -23,7 +23,7 @@ letdig  {letra}|{digito}
 %%
 	if (numlin==1) BEGIN(LEELIN); 
 	if (prlin) { 
-        fprintf(obj, "\t\t\t// %d: %s\n", numlin, linact); 
+        fprintf(obj, "\t\t\t/\/ %d: %s\n", numlin, linact); 
 	    free(linact); 
         prlin = false; 
     }

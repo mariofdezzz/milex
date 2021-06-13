@@ -1,6 +1,5 @@
 
-
-
+int p
 
 void f (int u) {
     float l
@@ -9,7 +8,7 @@ void f (int u) {
     i = 10
 }
 
-
-
-
+{
+    int g
+}
 

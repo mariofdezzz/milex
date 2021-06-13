@@ -3,7 +3,7 @@ extern char *inicat;
 
 extern struct reg {
   char *id; 
-  enum categ cat;  
+  enum categ cat;
   union {
     int tam;
     struct {
