@@ -565,7 +565,21 @@ switch-case:
   ;
 
 for: 
-    FOR '(' for-inicial ';' for-condicion ';' for-final ')' sentbloq
+    FOR '(' for-inicial ';'
+      {
+        $<entero>$ = ++et;
+        fprintf(obj, "L %d:\n", et);
+      }
+    for-condicion ';'
+      {
+        $<entero>$ = ++et;
+        fprintf(obj, "\tR0=I(R7);\n\tIF(!R0) GT(%d);\n", $<entero>$);
+      }
+    for-final ')'
+    sentbloq
+      {
+        fprintf(obj, "GT(%d);\n\tL %d:\t", $<entero>5, $<entero>8);
+      }
   ;
 
 for-inicial:

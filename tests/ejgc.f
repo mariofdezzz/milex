@@ -10,17 +10,8 @@ int f () {
 }
 
 {
-    int x = 0
-    int y = 1
-
-    while (x < 30) {
+    for (int x = 0; x < 10; x = x + 1) {
         println(x)
-        
-        int temp 
-        temp = y
-        y = x + y
-        x = temp
-
     }
 
     
