@@ -97,8 +97,7 @@ FILE *obj;
 // %type <real> declaracion
 %type <exp> aritmetico
 // %type <exp> condicion
-%type <exp> asignables
-%type <exp> declarables
+// %type <entero> asignables
 // %type <symbol> string
 // %type <array> iterable
 // %type <array> array
@@ -268,11 +267,16 @@ aritmetico:
       // $$.reg = NumeroRegistro;
     }
   | IDENTIF
-    { 
-      if ( 
-        buscat($1, varg) == NULL && 
-        buscat($1, varl)==NULL
-      ) yyerror("5: variable no declarada"); 
+    {
+      struct reg *p = buscat($1, varl);
+
+		  if (p!=NULL) 
+        fprintf(obj, "\tR0=I(R6%d);\n\tR7=R7-4;\n\tP(R7)=R0;\n", p->dir);
+		  else {
+		    p = buscat($1,varg);
+		    if (p!=NULL) fprintf(obj, "\tR0=I(0x%x);\n\tR7=R7-4;\n\tP(R7)=R0;\n", p->dir);
+		    else yyerror("5: variable no declarada"); 
+		  }
     }
   ;
 
@@ -435,8 +439,8 @@ tipo:
 ;
 
 asignacion:
-    IDENTIF asignables      
-      { 
+    IDENTIF
+      {
         struct reg *p = buscat($1, varl);
 
         if (p!=NULL) 
@@ -449,21 +453,23 @@ asignacion:
           else 
             yyerror("3: variable no declarada"); 
         }
-
+      }
+    asignables      
+      {
         fprintf(obj, "\tR0=I(R7);\n\tR1=P(R7+4);\n\tI(R1)=R0;\n\tR7=R7+8;\n");
       }
   ;
 
 asignables:
-    '=' aritmetico        {$$ = $2;}
-  | '=' condicion
+    '=' aritmetico        {}
+  | '=' condicion         {}
   | '=' string            {/*printf("%s\n", $1);*/}
   | '=' array
   | '=' '{' struct-bloque '}'
   ;
 
 declaracion:
-    tipo IDENTIF declarables
+    tipo IDENTIF
       {
         struct reg *t = buscat($1, tipo);
 
@@ -476,10 +482,13 @@ declaracion:
 		      if (gl==varl) { // variable local
             fprintf(obj, "\tR7=R7-4;\n");
             fprintf(obj, "\tR7=R7-4;\n\tR0=R6%d;\n\tP(R7)=R0;\n", p->dir); // revisar
-            fprintf(obj, "\tR0=I(R7);\n\tR1=P(R7+4);\n\tI(R1)=R0;\n\tR7=R7+8;\n");
           }
         }
         else yyerror("1: tipo inexistente");
+      }
+    asignables
+      {
+        fprintf(obj, "\tR0=I(R7);\n\tR1=P(R7+4);\n\tI(R1)=R0;\n\tR7=R7+8;\n");
       }
   | tipo IDENTIF
       {
@@ -497,14 +506,6 @@ declaracion:
         }
         else yyerror("1: tipo inexistente");
       }
-  ;
-
-declarables:
-    '=' aritmetico        {$$ = $2;}
-  | '=' condicion
-  | '=' string            {/*printf("%s\n", $1);*/}
-  | '=' array
-  | '=' '{' struct-bloque '}'
   ;
 
 if:
