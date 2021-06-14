@@ -454,9 +454,9 @@ tipo:
 ;
 
 id:
-    IDENTIF   { $$ = $1; }
-  | IDENTERO  { $$ = $1; }
+    IDENTERO  { $$ = $1; }
   | IDREAL    { $$ = $1; }
+  | IDLOGICO  { $$ = $1; }
   ;
 
 asignacion:
