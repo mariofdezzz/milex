@@ -13,7 +13,8 @@ int f () {
     int b = 456
     int c = 789
     
-    println((3 * 3 + 3) / 3)
+    println(++3)
+    println(--3)
     println(f())
 }
 

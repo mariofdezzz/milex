@@ -226,11 +226,39 @@ aritmetico:
           "\tR0=I(R7);\n\tR1=I(R7+4);\n\tR0=R1/R0;\n\tR7=R7+4;\n\tI(R7)=R0;\n"
         );
       }
-  | aritmetico '%' aritmetico       {/*$$ = resto($1, $3);*/}
+  | aritmetico '%' aritmetico
+      {
+        /*$$ = $1 % $3;*/
+        fprintf(
+          obj, 
+          "\tR0=I(R7);\n\tR1=I(R7+4);\n\tR0=R1%R0;\n\tR7=R7+4;\n\tI(R7)=R0;\n"
+        );
+      }
   | aritmetico POTENCIA aritmetico  {/*$$ = pow($1, $3);*/}
-  | '-' aritmetico                  {/*$$ = -$2;*/}
-  | aritmetico INCREMENTO           {/*$$ = $1 + 1;*/}
-  | aritmetico DECREMENTO           {/*$$ = $1 - 1;*/}
+  | '-' aritmetico
+      {
+        /*$$ = -$2;*/
+        fprintf(
+          obj, 
+          "\tR0=I(R7);\n\tR0=-R0;\n\tI(R7)=R0;\n"
+        );
+      }
+  | INCREMENTO aritmetico
+      {
+        /*$$ = $1 + 1;*/
+        fprintf(
+          obj, 
+          "\tR0=I(R7);\n\tR0=R0+1;\n\tI(R7)=R0;\n"
+        );
+      }
+  | DECREMENTO aritmetico
+      {
+        /*$$ = $1 - 1;*/
+        fprintf(
+          obj, 
+          "\tR0=I(R7);\n\tR0=R0-1;\n\tI(R7)=R0;\n"
+        );
+      }
   | '(' aritmetico ')'              {/*$$ = $2; copia el struct*/}
   | array '.' IDENTIF               {/*if(strcmp($3, "length") != 0) yyerror("Propiedad inesperada\n");*/}
   | REAL                            {$$.reg = sm;/*$$ = $1;*/}
@@ -249,16 +277,79 @@ aritmetico:
   ;
 
 condicion:
-    aritmetico '<' aritmetico       {/*$$ = $1 < $3 ? 1 : 0;*/}
-  | aritmetico MNIG aritmetico      {/*$$ = $1 <= $3 ? 1 : 0;*/}
-  | aritmetico '>' aritmetico       {/*$$ = $1 > $3 ? 1 : 0;*/}
-  | aritmetico MYIG aritmetico      {/*$$ = $1 >= $3 ? 1 : 0;*/}
-  | aritmetico IGUAL aritmetico     {/*$$ = $1 == $3 ? 1 : 0;*/}
-  | aritmetico DESIGUAL aritmetico  {/*$$ = $1 != $3 ? 1 : 0;*/}
-  | condicion AND condicion         {/*$$ = $1 && $3 ? 1 : 0;*/}
-  | condicion OR condicion          {/*$$ = $1 || $3 ? 1 : 0;*/}
-  | '!' condicion                   {/*$$ = ++$2 % 2;*/}
-  | '(' condicion ')'               {/*$$ = $2;*/}
+    aritmetico '<' aritmetico
+      {
+        /*$$ = $1 < $3 ? 1 : 0;*/
+        fprintf(
+          obj,
+          "\tR0=I(R7);\n\tR1=I(R7+4);\n\tR0=R1<R0;\n\tR7=R7+4;\n\tI(R7)=R0;\n"
+        );
+      }
+  | aritmetico MNIG aritmetico
+    {
+      /*$$ = $1 <= $3 ? 1 : 0;*/
+        fprintf(
+          obj,
+          "\tR0=I(R7);\n\tR1=I(R7+4);\n\tR0=R1<=R0;\n\tR7=R7+4;\n\tI(R7)=R0;\n"
+        );
+    }
+  | aritmetico '>' aritmetico
+    {
+      /*$$ = $1 > $3 ? 1 : 0;*/
+        fprintf(
+          obj,
+          "\tR0=I(R7);\n\tR1=I(R7+4);\n\tR0=R1>R0;\n\tR7=R7+4;\n\tI(R7)=R0;\n"
+        );
+    }
+  | aritmetico MYIG aritmetico
+    {
+      /*$$ = $1 >= $3 ? 1 : 0;*/
+        fprintf(
+          obj,
+          "\tR0=I(R7);\n\tR1=I(R7+4);\n\tR0=R1>=R0;\n\tR7=R7+4;\n\tI(R7)=R0;\n"
+        );
+    }
+  | aritmetico IGUAL aritmetico
+    {
+      /*$$ = $1 == $3 ? 1 : 0;*/
+        fprintf(
+          obj,
+          "\tR0=I(R7);\n\tR1=I(R7+4);\n\tR0=R1==R0;\n\tR7=R7+4;\n\tI(R7)=R0;\n"
+        );
+    }
+  | aritmetico DESIGUAL aritmetico
+      {
+        /*$$ = $1 != $3 ? 1 : 0;*/
+        fprintf(
+          obj,
+          "\tR0=I(R7);\n\tR1=I(R7+4);\n\tR0=R1!=R0;\n\tR7=R7+4;\n\tI(R7)=R0;\n"
+        );
+      }
+  | condicion AND condicion
+      {
+        /*$$ = $1 && $3 ? 1 : 0;*/
+        fprintf(
+          obj,
+          "\tR0=I(R7);\n\tR1=I(R7+4);\n\tR0=R1&&R0;\n\tR7=R7+4;\n\tI(R7)=R0;\n"
+        );
+      }
+  | condicion OR condicion
+      {
+        /*$$ = $1 || $3 ? 1 : 0;*/
+        fprintf(
+          obj,
+          "\tR0=I(R7);\n\tR1=I(R7+4);\n\tR0=R1||R0;\n\tR7=R7+4;\n\tI(R7)=R0;\n"
+        );
+      }
+  | '!' condicion
+      {
+        /*$$ = ++$2 % 2;*/
+        fprintf(
+          obj,
+          "\tR0=I(R7);\n\tR0=!R0;\n\tI(R7)=R0;\n"
+        );
+      }
+  | '(' condicion ')'
   | LOGICO                          
       {
         /*$$ = $1;*/
