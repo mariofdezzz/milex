@@ -102,6 +102,7 @@ FILE *obj;
 // %type <array> iterable
 // %type <array> array
 %type <symbol> tipo
+%type <entero> if
 %type <rp> funcion-uso
 
 /* Precedencia */
@@ -471,6 +472,9 @@ asignables:
 declaracion:
     tipo IDENTIF
       {
+      }
+    asignables
+      {
         struct reg *t = buscat($1, tipo);
 
         int d;
@@ -482,13 +486,10 @@ declaracion:
 		      if (gl==varl) { // variable local
             fprintf(obj, "\tR7=R7-4;\n");
             fprintf(obj, "\tR7=R7-4;\n\tR0=R6%d;\n\tP(R7)=R0;\n", p->dir); // revisar
+            fprintf(obj, "\tR0=I(R7);\n\tR1=P(R7+4);\n\tI(R1)=R0;\n\tR7=R7+8;\n");
           }
         }
         else yyerror("1: tipo inexistente");
-      }
-    asignables
-      {
-        fprintf(obj, "\tR0=I(R7);\n\tR1=P(R7+4);\n\tI(R1)=R0;\n\tR7=R7+8;\n");
       }
   | tipo IDENTIF
       {
@@ -509,9 +510,23 @@ declaracion:
   ;
 
 if:
-    IF '(' condicion ')' sentbloq
-  | IF '(' condicion ')' sentbloq ELSE sentbloq
+    IF '(' condicion ')'
+      {
+        $<entero>$ = ++et;
+        fprintf(
+          obj, 
+          "\tR0=I(R7);\n\tIF(!R0) GT(%d);\n",
+          et
+        );
+      }
+    sentbloq
+      {
+        fprintf(obj, "L %d:\t", $<entero>5);
+      }
+    else
   ;
+
+else: | ELSE sentbloq ;
 
 switch:
     SWITCH '(' aritmetico ')' '{' espacio-vacio switch-bloque '}'       {}

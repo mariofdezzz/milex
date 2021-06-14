@@ -6,8 +6,6 @@ int f () {
     float l
     int i
 
-    p = 101
-    println(p)
     return 33
 }
 
@@ -17,10 +15,11 @@ int f () {
     int c = 789
     p = 100
     
-    println(a)
-    println(b)
-    println(p)
-    println(c)
+    if (a >= 3) {
+        if (a >= 4) if (a >= 13) println(22)
+    }
+
+    
     println(f())
 }
 
