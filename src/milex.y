@@ -96,9 +96,9 @@ FILE *obj;
 // %type <real> asignacion
 // %type <real> declaracion
 %type <exp> aritmetico
+// %type <exp> condicion
 %type <exp> asignables
 %type <exp> declarables
-// %type <entero> condicion
 // %type <symbol> string
 // %type <array> iterable
 // %type <array> array
@@ -144,12 +144,30 @@ bloque:
           fprintf(obj, "\tR0=I(R7);\n\tR7=R7+4;\n");
       }
   ;
+
 ret:
-  | RETURN            {/*No admite salto de linea*/}
+  | RETURN salto
   | RETURN '\n' bloque
   | RETURN expresion  {/*Expresion??*/}
-  | RETURN aritmetico
+  | RETURN expr salto
   | RETURN expresion '\n' bloque
+  ;
+
+salto:
+    '\n'
+  | '\n' salto
+  ;
+
+expr:
+    aritmetico
+  | condicion
+  | funcion-uso
+      {
+        if ($1==voidp)
+          yyerror("7: rutina void no invocable en expresion");
+		    else 
+          fprintf(obj, "\tR7=R7-4;\n\tI(R7)=R0;\n");
+      }
   ;
 
 sentencia:
@@ -213,7 +231,11 @@ condicion:
   | condicion OR condicion          {/*$$ = $1 || $3 ? 1 : 0;*/}
   | '!' condicion                   {/*$$ = ++$2 % 2;*/}
   | '(' condicion ')'               {/*$$ = $2;*/}
-  | LOGICO                          {/*$$ = $1;*/}
+  | LOGICO                          
+      {
+        /*$$ = $1;*/
+        fprintf(obj, "\tR7=R7-4;\n\tI(R7)=%d;\n", $1);
+      }
   | IDENTIF
       { 
         if (
@@ -414,11 +436,11 @@ while:
 
 print:
     PRINT '(' print-expresion ')'
-      {
+      { // eliminar print-expresion
         ++et;
         fprintf(obj, "\tR5=%d;\n\tGT(print);\nL %d:\tR7=R7+4;\n", et, et); 
       }
-  | PRINTLN '(' print-expresion ')'
+  | PRINTLN '(' expr ')'
       {
         ++et;
         fprintf(obj, "\tR5=%d;\n\tGT(println);\nL %d:\tR7=R7+4;\n", et, et); 
