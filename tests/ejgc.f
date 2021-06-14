@@ -3,17 +3,17 @@ int p
 
 
 int f () {
-    float l
     int i
+    i = 3
 
-    return 33
+    int k = 20
+
+    return k
 }
 
 {
-    for (int x = 0; x < 10; x = x + 1) {
-        println(x)
-    }
-
+    p = 2
+    int x = 3
     
     println(f())
 }

@@ -232,7 +232,8 @@ aritmetico:
         /*$$ = $1 % $3;*/
         fprintf(
           obj, 
-          "\tR0=I(R7);\n\tR1=I(R7+4);\n\tR0=R1%R0;\n\tR7=R7+4;\n\tI(R7)=R0;\n"
+          "\tR0=I(R7);\n\tR1=I(R7+4);\n\tR0=R1%cR0;\n\tR7=R7+4;\n\tI(R7)=R0;\n",
+          '%'
         );
       }
   | aritmetico POTENCIA aritmetico  {/*$$ = pow($1, $3);*/}
@@ -492,9 +493,7 @@ asignables:
 declaracion:
     tipo IDENTIF
       {
-      }
-    asignables
-      {
+        // Declaracion
         struct reg *t = buscat($1, tipo);
 
         int d;
@@ -502,14 +501,24 @@ declaracion:
         else d = fm -= t->tam;
 
         if (t!=NULL && t!=voidp) {
-          struct reg *p = insvr($2, gl, t, d);
-		      if (gl==varl) { // variable local
+          insvr($2, gl, t, d);
+
+		      if (gl==varl) 
             fprintf(obj, "\tR7=R7-4;\n");
-            fprintf(obj, "\tR7=R7-4;\n\tR0=R6%d;\n\tP(R7)=R0;\n", p->dir); // revisar
-            fprintf(obj, "\tR0=I(R7);\n\tR1=P(R7+4);\n\tI(R1)=R0;\n\tR7=R7+8;\n");
-          }
         }
         else yyerror("1: tipo inexistente");
+
+
+        // Asignacion
+        if (gl==varg)
+          // No ocurre nunca pq no existe declaracion + asignacion en global
+          fprintf(obj, "\tR7=R7-4;\n\tP(R7)=0x%x;\n", d);
+        else
+          fprintf(obj, "\tR7=R7-4;\n\tR0=R6%d;\n\tP(R7)=R0;\n", d);
+      }
+    asignables
+      {
+        fprintf(obj, "\tR0=I(R7);\n\tR1=P(R7+4);\n\tI(R1)=R0;\n\tR7=R7+8;\n");
       }
   | tipo IDENTIF
       {

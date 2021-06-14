@@ -59,12 +59,21 @@ letdig  {letra}|{digito}
 "println"               { return PRINTLN; }
 {letra}({letdig}|[-_])* { 
                             yylval.symbol = strdup(yytext);
-                            struct reg *p = buscat(yytext, varg);
+                            struct reg *p = buscat(yytext, varl);
                             if (p!=NULL) {
                                 switch(p->tip->id[0]) {
                                     case 'f': return IDREAL;
                                     case 'i': return IDENTERO;
                                     case 'b': return IDLOGICO;
+                                }
+                            } else {
+                                p = buscat(yytext, varg);
+                                if (p!=NULL) {
+                                    switch(p->tip->id[0]) {
+                                        case 'f': return IDREAL;
+                                        case 'i': return IDENTERO;
+                                        case 'b': return IDLOGICO;
+                                    }
                                 }
                             }
                             return IDENTIF;
