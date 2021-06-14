@@ -57,7 +57,7 @@ FILE *obj;
 %token <real> REAL
 %token <entero> LOGICO
 %token <symbol> CADENA
-%token <id> IDENTIF
+%token <id> IDENTIF IDREAL IDENTERO IDLOGICO IDCADENA IDARRAY
 
 %token <symbol> INT
 %token <symbol> FLOAT
@@ -102,6 +102,7 @@ FILE *obj;
 // %type <array> iterable
 // %type <array> array
 %type <symbol> tipo
+%type <symbol> id
 %type <entero> if
 %type <rp> funcion-uso
 
@@ -263,23 +264,36 @@ aritmetico:
   | array '.' IDENTIF               {/*if(strcmp($3, "length") != 0) yyerror("Propiedad inesperada\n");*/}
   | REAL                            {$$.reg = sm;/*$$ = $1;*/}
   | ENTERO
-    { 
-      fprintf(obj, "\tR7=R7-4;\n\tI(R7)=%d;\n", $1); 
-      // $$.reg = NumeroRegistro;
-    }
-  | IDENTIF
-    {
-      struct reg *p = buscat($1, varl);
+      { 
+        fprintf(obj, "\tR7=R7-4;\n\tI(R7)=%d;\n", $1); 
+        // $$.reg = NumeroRegistro;
+      }
+  | IDREAL
+      {
+        struct reg *p = buscat($1, varl);
 
-		  if (p!=NULL) 
-        fprintf(obj, "\tR0=I(R6%d);\n\tR7=R7-4;\n\tP(R7)=R0;\n", p->dir);
-		  else {
-		    p = buscat($1,varg);
-		    if (p!=NULL) fprintf(obj, "\tR0=I(0x%x);\n\tR7=R7-4;\n\tP(R7)=R0;\n", p->dir);
-		    else yyerror("5: variable no declarada"); 
-		  }
-    }
+        if (p!=NULL) 
+          fprintf(obj, "\tR0=I(R6%d);\n\tR7=R7-4;\n\tP(R7)=R0;\n", p->dir);
+        else {
+          p = buscat($1,varg);
+          if (p!=NULL) fprintf(obj, "\tR0=I(0x%x);\n\tR7=R7-4;\n\tP(R7)=R0;\n", p->dir);
+          else yyerror("5: variable no declarada"); 
+        }
+      }
+  | IDENTERO
+      {
+        struct reg *p = buscat($1, varl);
+
+        if (p!=NULL) 
+          fprintf(obj, "\tR0=I(R6%d);\n\tR7=R7-4;\n\tP(R7)=R0;\n", p->dir);
+        else {
+          p = buscat($1,varg);
+          if (p!=NULL) fprintf(obj, "\tR0=I(0x%x);\n\tR7=R7-4;\n\tP(R7)=R0;\n", p->dir);
+          else yyerror("5: variable no declarada"); 
+        }
+      }
   ;
+
 
 condicion:
     aritmetico '<' aritmetico
@@ -360,7 +374,7 @@ condicion:
         /*$$ = $1;*/
         fprintf(obj, "\tR7=R7-4;\n\tI(R7)=%d;\n", $1);
       }
-  | IDENTIF
+  | IDLOGICO
       { 
         if (
           buscat($1, varg) == NULL && 
@@ -378,7 +392,7 @@ string:
   | condicion '+' string
   | array '+' string
   | CADENA              {}
-  | IDENTIF
+  | IDCADENA
       { 
         if (
           buscat($1, varg) == NULL && 
@@ -395,7 +409,7 @@ array:
   | NEW FLOAT '[' ENTERO ']'
   | NEW BOOL '[' ENTERO ']'
   | NEW STRING '[' ENTERO ']'
-  | IDENTIF
+  | IDARRAY
       { 
         if (
           buscat($1, varg) == NULL && 
@@ -439,8 +453,14 @@ tipo:
   | VOID    {$$ = $1;}
 ;
 
+id:
+    IDENTIF   { $$ = $1; }
+  | IDENTERO  { $$ = $1; }
+  | IDREAL    { $$ = $1; }
+  ;
+
 asignacion:
-    IDENTIF
+    id
       {
         struct reg *p = buscat($1, varl);
 

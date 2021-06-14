@@ -2,6 +2,7 @@
 #include "milex.tab.h"
 #include <stdio.h>
 #include <stdbool.h>
+#include "../libraries/ts.h"
 
 int numlin = 1;
 extern FILE *obj; 
@@ -24,7 +25,7 @@ letdig  {letra}|{digito}
 	if (numlin==1) BEGIN(LEELIN); 
 	if (prlin) { 
         fprintf(obj, "\t\t\t/\/ %d: %s\n", numlin, linact); 
-	    free(linact); 
+	    free(linact);
         prlin = false; 
     }
 <LEELIN>^.*	{ linact = strdup(yytext); prlin = true; yyless(0); BEGIN(INITIAL); }
@@ -56,7 +57,18 @@ letdig  {letra}|{digito}
 "new"                   { return NEW; }
 "print"                 { return PRINT; }
 "println"               { return PRINTLN; }
-{letra}({letdig}|[-_])* { yylval.symbol = strdup(yytext); return IDENTIF; }
+{letra}({letdig}|[-_])* { 
+                            yylval.symbol = strdup(yytext);
+                            struct reg *p = buscat(yytext, varg);
+                            if (p!=NULL) {
+                                switch(p->tip->id[0]) {
+                                    case 'f': return IDREAL;
+                                    case 'i': return IDENTERO;
+                                    case 'b': return IDLOGICO;
+                                }
+                            }
+                            return IDENTIF;
+                        }
 "++"                    {return INCREMENTO;}
 "--"                    {return DECREMENTO;}
 "**"                    {return POTENCIA;}
