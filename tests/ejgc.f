@@ -1,15 +1,15 @@
 
 int p
 
-void f (int u) {
+int f () {
     float l
     int i
 
-    i = 10
-}
+    return 33}
 
 {
     int g = 345
     println(g)
+    println(f())
 }
 

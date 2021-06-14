@@ -103,7 +103,7 @@ FILE *obj;
 // %type <array> iterable
 // %type <array> array
 %type <symbol> tipo
-// %type <rp> funcion-uso
+%type <rp> funcion-uso
 
 /* Precedencia */
 %left AND OR
@@ -136,9 +136,19 @@ bloque:
   | '\n' bloque       {}
   | sentencia         {}
   | sentencia bloque  {}
+  | ret
+      {
+        if ($<rp>-2==voidp) // no funciona !
+          yyerror("6: rutina void no puede retornar valor");
+		    else 
+          fprintf(obj, "\tR0=I(R7);\n\tR7=R7+4;\n");
+      }
+  ;
+ret:
   | RETURN            {/*No admite salto de linea*/}
   | RETURN '\n' bloque
-  | RETURN expresion
+  | RETURN expresion  {/*Expresion??*/}
+  | RETURN aritmetico
   | RETURN expresion '\n' bloque
   ;
 
@@ -162,7 +172,7 @@ sentbloq: sentencia | '{' bloque '}' ;
 expresion:
     asignacion            {}
   | declaracion           {/*printf("%f\n", $1);*/}
-  | error                 {printf("en expresion\n");}
+  | error                 {printf("en expresion\n"); /* !! quitar todos */}
   ;
 
 aritmetico:
@@ -423,11 +433,29 @@ print-expresion:
   | string
   | array
   | funcion-uso
+      {
+        if ($1==voidp)
+          yyerror("7: rutina void no invocable en expresion");
+		    else 
+          fprintf(obj, "\tR7=R7-4;\n\tI(R7)=R0;\n");
+      }
   ;
 
 funcion-uso: 
     IDENTIF '(' ')'
       {
+        $$ = buscat($1, rut);
+        
+        if ($$==NULL) 
+          yyerror("4: rutina no declarada"); 
+        else {
+          ++et;
+          fprintf(
+            obj, 
+            "\tR7=R7-8;\n\tP(R7+4)=R6;\n\tP(R7)=%d;\n\tGT(%d);\nL %d:\tR7=R7+8;\n", 
+            et, $$->dir, et
+          );
+        }
         if (buscat($1, rut) == NULL) yyerror("4: rutina no declarada");
       }
   | IDENTIF '(' params-uso ')'
@@ -465,7 +493,7 @@ funcion-declaracion:
         dump($2);
         finbloq();
         gl=varg;
-        // fprintf(obj, "\tR7=R6;\n\tR6=P(R7+4);\n\tR5=P(R7);\n\tGT(R5);\n");
+        fprintf(obj, "\tR7=R6;\n\tR6=P(R7+4);\n\tR5=P(R7);\n\tGT(R5);\n");
       }
   | tipo IDENTIF '(' params-declaracion ')' '{'
       { 
@@ -487,6 +515,7 @@ funcion-declaracion:
         dump($2);
         finbloq();
         gl=varg;
+        fprintf(obj, "\tR7=R6;\n\tR6=P(R7+4);\n\tR5=P(R7);\n\tGT(R5);\n");
       }
   ;
 
