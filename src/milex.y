@@ -194,10 +194,38 @@ expresion:
   ;
 
 aritmetico:
-    aritmetico '+' aritmetico       {/*$$ = $1 + $3;*/}
-  | aritmetico '-' aritmetico       {/*$$ = $1 - $3;*/}
-  | aritmetico '*' aritmetico       {/*$$ = $1 * $3;*/}
-  | aritmetico '/' aritmetico       {/*$$ = $1 / $3;*/}
+    aritmetico '+' aritmetico
+      {
+        /*$$ = $1 + $3;*/
+        fprintf(
+          obj, 
+          "\tR0=I(R7);\n\tR1=I(R7+4);\n\tR0=R1+R0;\n\tR7=R7+4;\n\tI(R7)=R0;\n"
+        );
+      }
+  | aritmetico '-' aritmetico
+      {
+        /*$$ = $1 - $3;*/
+        fprintf(
+          obj, 
+          "\tR0=I(R7);\n\tR1=I(R7+4);\n\tR0=R1-R0;\n\tR7=R7+4;\n\tI(R7)=R0;\n"
+        );
+      }
+  | aritmetico '*' aritmetico
+      {
+        /*$$ = $1 * $3;*/
+        fprintf(
+          obj, 
+          "\tR0=I(R7);\n\tR1=I(R7+4);\n\tR0=R1*R0;\n\tR7=R7+4;\n\tI(R7)=R0;\n"
+        );
+      }
+  | aritmetico '/' aritmetico
+      {
+        /*$$ = $1 / $3;*/
+        fprintf(
+          obj, 
+          "\tR0=I(R7);\n\tR1=I(R7+4);\n\tR0=R1/R0;\n\tR7=R7+4;\n\tI(R7)=R0;\n"
+        );
+      }
   | aritmetico '%' aritmetico       {/*$$ = resto($1, $3);*/}
   | aritmetico POTENCIA aritmetico  {/*$$ = pow($1, $3);*/}
   | '-' aritmetico                  {/*$$ = -$2;*/}
