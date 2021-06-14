@@ -2,19 +2,22 @@
 int p
 
 
-int f () {
-    int i
-    i = 3
+int fibo () {
+    int j = 0
+    int k = 1
 
-    int k = 20
+    for (int i=0; i<25; i=i+1) {
+        println(j)
 
-    return k
+        int temp = k
+        k = j + k
+        j = temp
+    }
+
+    return j
 }
 
-{
-    p = 2
-    int x = 3
-    
-    println(f())
+{   
+    println(fibo())
 }
 
