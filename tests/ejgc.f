@@ -10,13 +10,17 @@ int f () {
 }
 
 {
-    int a = 123
-    int b = 456
-    int c = 789
-    p = 100
-    
-    if (a >= 3) {
-        if (a >= 4) if (a >= 13) println(22)
+    int x = 0
+    int y = 1
+
+    while (x < 30) {
+        println(x)
+        
+        int temp 
+        temp = y
+        y = x + y
+        x = temp
+
     }
 
     

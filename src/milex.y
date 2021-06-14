@@ -521,7 +521,7 @@ if:
       }
     sentbloq
       {
-        fprintf(obj, "L %d:\t", $<entero>5);
+        fprintf(obj, "L %d:\n", $<entero>5);
       }
     else
   ;
@@ -566,7 +566,20 @@ for-in:
   ;
 
 while:
-    WHILE '(' condicion ')' sentbloq
+    WHILE
+      {
+        $<entero>$ = ++et;
+        fprintf(obj, "L %d:\n", et);
+      }
+    '(' condicion ')'
+      {
+        $<entero>$ = ++et;
+        fprintf(obj, "\tR0=I(R7);\n\tIF(!R0) GT(%d);\n", $<entero>$);
+      }
+    sentbloq
+      {
+        fprintf(obj, "GT(%d);\n\tL %d:\t", $<entero>2, $<entero>6);
+      }
   ;
 
 print:
