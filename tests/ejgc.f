@@ -9,6 +9,7 @@ void f (int u) {
 }
 
 {
-    int g
+    int g = 345
+    println(g)
 }
 

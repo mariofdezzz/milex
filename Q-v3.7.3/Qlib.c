@@ -69,8 +69,11 @@ L new_: {//entre llaves por usar variable local
 // Entrada: I(R7) = valor entero a visualizar
 //	    R5 = etiqueta de retorno
 // No modifica ningún registro
-L print: {printf("%d\n", I(R7));
+L print: {printf("%d", I(R7));
           GT(R5);                   // retorna
 	 }                                                          
+L println: {printf("%d\n", I(R7));
+          GT(R5);                   // retorna
+	 }                                                        
 
 ENDLIB

@@ -404,7 +404,15 @@ while:
 
 print:
     PRINT '(' print-expresion ')'
+      {
+        ++et;
+        fprintf(obj, "\tR5=%d;\n\tGT(print);\nL %d:\tR7=R7+4;\n", et, et); 
+      }
   | PRINTLN '(' print-expresion ')'
+      {
+        ++et;
+        fprintf(obj, "\tR5=%d;\n\tGT(println);\nL %d:\tR7=R7+4;\n", et, et); 
+      }
   ;
 
 print-expresion:
