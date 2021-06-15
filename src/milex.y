@@ -128,21 +128,6 @@ bloque:
   | '\n' bloque       {}
   | sentencia         {}
   | sentencia bloque  {}
-  | ret
-      {
-        if ($<rp>-2==voidp) // no funciona !
-          yyerror("6: rutina void no puede retornar valor");
-		    else 
-          fprintf(obj, "\tR0=I(R7);\n\tR7=R7+4;\n");
-      }
-  ;
-
-ret:
-  | RETURN salto
-  | RETURN '\n' bloque
-  | RETURN expresion  {/*Expresion??*/}
-  | RETURN expr salto
-  | RETURN expresion '\n' bloque
   ;
 
 salto:
@@ -151,7 +136,7 @@ salto:
   ;
 
 expr:
-    aritmetico  { $$ = $1;/*Borrar*/ }
+    aritmetico
   | condicion
   | funcion-uso
       {
@@ -174,7 +159,6 @@ sentencia:
   | funcion-declaracion
   | BREAK
   | CONTINUE
-  | error               {printf("en sentencia\n");}
   ;
 
 sentbloq: sentencia | '{' bloque '}' ;
@@ -182,7 +166,6 @@ sentbloq: sentencia | '{' bloque '}' ;
 expresion:
     asignacion
   | declaracion
-  | error                 {printf("en expresion\n"); /* !! quitar todos */}
   ;
 
 aritmetico:
@@ -557,7 +540,7 @@ asignacion:
             yyerror("3: variable no declarada"); 
         }
       }
-    asignables {/*Falta un mens de error ?*/}
+    asignables
   ;
 
 asignables:
@@ -765,6 +748,14 @@ params-uso:
   | IDENTIF ',' params-uso
   ;
 
+ret:
+  | RETURN salto
+  | RETURN '\n' bloque
+  | RETURN expr
+  | RETURN expr salto
+  | RETURN expr '\n' bloque
+  ;
+
 funcion-declaracion:
     tipo IDENTIF '(' ')' '{'
       {
@@ -779,7 +770,14 @@ funcion-declaracion:
         }
         gl=varl;
       } 
-    bloque '}' 
+    bloque ret 
+      {
+        if ($<rp>6==voidp)
+          yyerror("6: rutina void no puede retornar valor");
+		    else 
+          fprintf(obj, "\tR0=I(R7);\n\tR7=R7+4;\n");
+      } 
+    '}' 
       {
         dump($2);
         finbloq();
