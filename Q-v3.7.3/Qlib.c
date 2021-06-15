@@ -77,5 +77,13 @@ L println: {
             printf("%d\n", I(R7));
             GT(R5);                   // retorna
 	        }
+L printd: {
+          printf("%lf\n", D(R7));
+          GT(R5);                   // retorna
+	      }
+L printlnd: {
+            printf("%lf\n", D(R7));
+            GT(R5);                   // retorna
+	        }
 
 ENDLIB

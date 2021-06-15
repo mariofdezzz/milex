@@ -1,7 +1,11 @@
 
-{   
-    int a = 22
+int p
 
-    println(a)
+{
+    p=0
+    while (p >= -8) {
+        print(p)
+        p = --p
+    }
 }
 

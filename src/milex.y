@@ -32,8 +32,6 @@ void inits() {
   inst("bool", 1);
   inst("int", 4);
   inst("float", 8);
-  // inst("string", 8);
-  // inst("struct", 8);
 }
 
 FILE *obj;
@@ -49,7 +47,7 @@ FILE *obj;
   struct reg *rp;
 
   struct {
-    char* tipo;
+    struct reg *tipo;
     int reg;
   } exp;
 }
@@ -96,6 +94,8 @@ FILE *obj;
 // %type <real> asignacion
 // %type <real> declaracion
 %type <exp> aritmetico
+%type <exp> real
+%type <exp> expr
 // %type <exp> condicion
 // %type <entero> asignables
 // %type <symbol> string
@@ -160,7 +160,7 @@ salto:
   ;
 
 expr:
-    aritmetico
+    aritmetico  { $$ = $1; }
   | condicion
   | funcion-uso
       {
@@ -219,14 +219,6 @@ aritmetico:
           "\tR0=I(R7);\n\tR1=I(R7+4);\n\tR0=R1*R0;\n\tR7=R7+4;\n\tI(R7)=R0;\n"
         );
       }
-  | aritmetico '/' aritmetico
-      {
-        /*$$ = $1 / $3;*/
-        fprintf(
-          obj, 
-          "\tR0=I(R7);\n\tR1=I(R7+4);\n\tR0=R1/R0;\n\tR7=R7+4;\n\tI(R7)=R0;\n"
-        );
-      }
   | aritmetico '%' aritmetico
       {
         /*$$ = $1 % $3;*/
@@ -263,30 +255,16 @@ aritmetico:
       }
   | '(' aritmetico ')'              {/*$$ = $2; copia el struct*/}
   | array '.' IDENTIF               {/*if(strcmp($3, "length") != 0) yyerror("Propiedad inesperada\n");*/}
-  | REAL                            {$$.reg = sm;/*$$ = $1;*/}
   | ENTERO
       { 
-        fprintf(obj, "\tR7=R7-4;\n\tI(R7)=%d;\n", $1); 
-        // $$.reg = NumeroRegistro;
-      }
-  | IDREAL
-      {
-        struct reg *p = buscat($1, varl);
-
-        if (p!=NULL) 
-          fprintf(obj, "\tR0=I(R6%d);\n\tR7=R7-4;\n\tP(R7)=R0;\n", p->dir);
-        else {
-          p = buscat($1,varg);
-          if (p!=NULL) fprintf(obj, "\tR0=I(0x%x);\n\tR7=R7-4;\n\tP(R7)=R0;\n", p->dir);
-          else yyerror("5: variable no declarada"); 
-        }
+        fprintf(obj, "\tR7=R7-4;\n\tI(R7)=%d;\n", $1);
       }
   | IDENTERO
       {
         struct reg *p = buscat($1, varl);
 
         if (p!=NULL) 
-          fprintf(obj, "\tR0=I(R6%d);\n\tR7=R7-4;\n\tP(R7)=R0;\n", p->dir);
+          fprintf(obj, "\tR0=I(R6%d);\n\tR7=R7-4;\n\tP(R7)=R0;\n", p->dir); // quitar la P() por I()
         else {
           p = buscat($1,varg);
           if (p!=NULL) fprintf(obj, "\tR0=I(0x%x);\n\tR7=R7-4;\n\tP(R7)=R0;\n", p->dir);
@@ -295,6 +273,101 @@ aritmetico:
       }
   ;
 
+real:
+    real '+' real
+      {
+        fprintf(
+          obj, 
+          "\tRR0=D(R7);\n\tRR1=D(R7+8);\n\tRR0=RR1+RR0;\n\tR7=R7+8;\n\tD(R7)=RR0;\n"
+        );
+      }
+  | real '-' real
+      {
+        /*$$ = $1 - $3;*/
+        fprintf(
+          obj, 
+          "\tRR0=D(R7);\n\tRR1=D(R7+8);\n\tRR0=RR1-RR0;\n\tR7=R7+8;\n\tD(R7)=RR0;\n"
+        );
+      }
+  | real '*' real
+      {
+        /*$$ = $1 * $3;*/
+        fprintf(
+          obj, 
+          "\tRR0=D(R7);\n\tRR1=D(R7+8);\n\tRR0=RR1*RR0;\n\tR7=R7+8;\n\tD(R7)=RR0;\n"
+        );
+      }
+  | real '/' real
+      {
+        /*$$ = $1 / $3;*/
+        fprintf(
+          obj, 
+          "\tRR0=D(R7);\n\tRR1=D(R7+8);\n\tRR0=RR1/RR0;\n\tR7=R7+8;\n\tD(R7)=RR0;\n"
+        );
+      }
+  | aritmetico '/' aritmetico
+      {
+        /*$$ = $1 / $3;*/
+        fprintf(
+          obj, 
+          "\tRR0=I(R7);\n\tRR1=I(R7+4);\n\tRR0=RR1/RR0;\n\tD(R7)=RR0;\n"
+        );
+      }
+  | real '%' real
+      {
+        /*$$ = $1 % $3;*/
+        fprintf(
+          obj, 
+          "\tRR0=D(R7);\n\tRR1=D(R7+8);\n\tRR0=RR1%cRR0;\n\tR7=R7+8;\n\tD(R7)=RR0;\n",
+          '%'
+        );
+      }
+  | real POTENCIA real
+  | '-' real
+      {
+        /*$$ = -$2;*/
+        fprintf(
+          obj, 
+          "\tRR0=D(R7);\n\tRR0=-RR0;\n\tD(R7)=RR0;\n"
+        );
+      }
+  | INCREMENTO real
+      {
+        /*$$ = $1 + 1;*/
+        fprintf(
+          obj, 
+          "\tRR0=D(R7);\n\tRR0=RR0+1;\n\tD(R7)=RR0;\n"
+        );
+      }
+  | DECREMENTO real
+      {
+        /*$$ = $1 - 1;*/
+        fprintf(
+          obj, 
+          "\tRR0=D(R7);\n\tRR0=RR0-1;\n\tD(R7)=RR0;\n"
+        );
+      }
+  | '(' real ')'
+  | REAL
+      {
+        fprintf(obj, "\tR7=R7-8;\n\tD(R7)=%lf;\n", $1);
+      }
+  | IDREAL
+      {
+        struct reg *p = buscat($1, varl);
+
+        if (p!=NULL) 
+          fprintf(obj, "\tRR0=D(R6%d);\n\tR7=R7-8;\n\tD(R7)=RR0;\n", p->dir);
+        else {
+          p = buscat($1,varg);
+
+          if (p!=NULL) 
+            fprintf(obj, "\tRR0=D(0x%x);\n\tR7=R7-8;\n\tD(R7)=RR0;\n", p->dir);
+          else 
+            yyerror("5: variable no declarada"); 
+        }
+      }
+  ;
 
 condicion:
     aritmetico '<' aritmetico
@@ -343,6 +416,53 @@ condicion:
         fprintf(
           obj,
           "\tR0=I(R7);\n\tR1=I(R7+4);\n\tR0=R1!=R0;\n\tR7=R7+4;\n\tI(R7)=R0;\n"
+        );
+      }
+  | real '<' real
+      {
+        fprintf(
+          obj,
+          "\tRR0=D(R7);\n\tRR1=D(R7+8);\n\tR0=RR1<RR0;\n\tR7=R7+12;\n\tI(R7)=R0;\n"
+        );
+      }
+  | real MNIG real
+    {
+      /*$$ = $1 <= $3 ? 1 : 0;*/
+        fprintf(
+          obj,
+          "\tRR0=D(R7);\n\tRR1=D(R7+8);\n\tR0=RR1<=RR0;\n\tR7=R7+12;\n\tI(R7)=R0;\n"
+        );
+    }
+  | real '>' real
+    {
+      /*$$ = $1 > $3 ? 1 : 0;*/
+        fprintf(
+          obj,
+          "\tRR0=D(R7);\n\tRR1=D(R7+8);\n\tR0=RR1>RR0;\n\tR7=R7+12;\n\tI(R7)=R0;\n"
+        );
+    }
+  | real MYIG real
+    {
+      /*$$ = $1 >= $3 ? 1 : 0;*/
+        fprintf(
+          obj,
+          "\tRR0=D(R7);\n\tRR1=D(R7+8);\n\tR0=RR1>=RR0;\n\tR7=R7+12;\n\tI(R7)=R0;\n"
+        );
+    }
+  | real IGUAL real
+    {
+      /*$$ = $1 == $3 ? 1 : 0;*/
+        fprintf(
+          obj,
+          "\tRR0=D(R7);\n\tRR1=D(R7+8);\n\tR0=RR1==RR0;\n\tR7=R7+12;\n\tI(R7)=R0;\n"
+        );
+    }
+  | real DESIGUAL real
+      {
+        /*$$ = $1 != $3 ? 1 : 0;*/
+        fprintf(
+          obj,
+          "\tRR0=D(R7);\n\tRR1=D(R7+8);\n\tR0=RR1!=RR0;\n\tR7=R7+12;\n\tI(R7)=R0;\n"
         );
       }
   | condicion AND condicion
@@ -476,16 +596,23 @@ asignacion:
             yyerror("3: variable no declarada"); 
         }
       }
-    asignables      
-      {
-        fprintf(obj, "\tR0=I(R7);\n\tR1=P(R7+4);\n\tI(R1)=R0;\n\tR7=R7+8;\n");
-      }
+    asignables {/*Falta un mens de error ?*/}
   ;
 
 asignables:
-    '=' aritmetico        {}
-  | '=' condicion         {}
-  | '=' string            {/*printf("%s\n", $1);*/}
+    '=' aritmetico
+      {
+        fprintf(obj, "\tR0=I(R7);\n\tR1=P(R7+4);\n\tI(R1)=R0;\n\tR7=R7+8;\n");
+      }
+  | '=' real
+      {
+        fprintf(obj, "\tRR0=D(R7);\n\tR1=P(R7+8);\n\tD(R1)=RR0;\n\tR7=R7+12;\n");
+      }
+  | '=' condicion
+      {
+        fprintf(obj, "\tR0=I(R7);\n\tR1=P(R7+4);\n\tI(R1)=R0;\n\tR7=R7+8;\n");
+      }
+  | '=' string
   | '=' array
   | '=' '{' struct-bloque '}'
   ;
@@ -517,9 +644,6 @@ declaracion:
           fprintf(obj, "\tR7=R7-4;\n\tR0=R6%d;\n\tP(R7)=R0;\n", d);
       }
     asignables
-      {
-        fprintf(obj, "\tR0=I(R7);\n\tR1=P(R7+4);\n\tI(R1)=R0;\n\tR7=R7+8;\n");
-      }
   | tipo IDENTIF
       {
         struct reg *t = buscat($1, tipo);
@@ -626,31 +750,26 @@ while:
   ;
 
 print:
-    PRINT '(' print-expresion ')'
-      { // eliminar print-expresion
+    PRINT '(' expr ')'
+      {
         ++et;
         fprintf(obj, "\tR5=%d;\n\tGT(print);\nL %d:\tR7=R7+4;\n", et, et); 
       }
   | PRINTLN '(' expr ')'
       {
         ++et;
-        fprintf(obj, "\tR5=%d;\n\tGT(println);\nL %d:\tR7=R7+4;\n", et, et); 
+        fprintf(obj, "\tR5=%d;\n\tGT(println);\nL %d:\tR7=R7+4;\n", et, et);
+          
       }
-  ;
-
-print-expresion:
-    '\n'
-  | '\n' print-expresion
-  | aritmetico
-  | condicion
-  | string
-  | array
-  | funcion-uso
+  | PRINT '(' real ')'
       {
-        if ($1==voidp)
-          yyerror("7: rutina void no invocable en expresion");
-		    else 
-          fprintf(obj, "\tR7=R7-4;\n\tI(R7)=R0;\n");
+        ++et;
+        fprintf(obj, "\tR5=%d;\n\tGT(printd);\nL %d:\tR7=R7+4;\n", et, et); 
+      }
+  | PRINTLN '(' real ')'
+      {
+        ++et;
+        fprintf(obj, "\tR5=%d;\n\tGT(printlnd);\nL %d:\tR7=R7+8;\n", et, et);
       }
   ;
 

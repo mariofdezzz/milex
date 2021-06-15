@@ -32,3 +32,5 @@
 // modificadas / nuevas
 #define print    -12    // visualiza ristra y/o entero
 #define println  -13    // visualiza ristra y/o entero
+#define printd  -14    // visualiza ristra y/o entero
+#define printlnd  -15    // visualiza ristra y/o entero
