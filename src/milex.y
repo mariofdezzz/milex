@@ -2,8 +2,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-// #include <stdbool.h>
-// #include <iostream>
 #include <string.h>
 #include <stddef.h>
 
@@ -91,16 +89,9 @@ FILE *obj;
 %token <symbol> PRINT
 %token <symbol> PRINTLN
 
-// %type <real> asignacion
-// %type <real> declaracion
 %type <exp> aritmetico
 %type <exp> real
 %type <exp> expr
-// %type <exp> condicion
-// %type <entero> asignables
-// %type <symbol> string
-// %type <array> iterable
-// %type <array> array
 %type <symbol> tipo
 %type <symbol> id
 %type <entero> if
@@ -113,7 +104,7 @@ FILE *obj;
 %left '*' '/' '%'
 %right POTENCIA
 %left '!' INCREMENTO DECREMENTO
-%left '.' // array + array.length
+%left '.'
 
 %%
 prog:
@@ -160,7 +151,7 @@ salto:
   ;
 
 expr:
-    aritmetico  { $$ = $1; }
+    aritmetico  { $$ = $1;/*Borrar*/ }
   | condicion
   | funcion-uso
       {
@@ -172,32 +163,31 @@ expr:
   ;
 
 sentencia:
-    expresion           {}
-  | if                  {}
-  | switch              {}
-  | for                 {}
-  | for-in              {}
-  | while               {}
-  | print               {}
-  | funcion-uso         {}
-  | funcion-declaracion {}
-  | BREAK               {}
-  | CONTINUE            {}
+    expresion
+  | if
+  | switch
+  | for
+  | for-in
+  | while
+  | print
+  | funcion-uso
+  | funcion-declaracion
+  | BREAK
+  | CONTINUE
   | error               {printf("en sentencia\n");}
   ;
 
 sentbloq: sentencia | '{' bloque '}' ;
 
 expresion:
-    asignacion            {}
-  | declaracion           {/*printf("%f\n", $1);*/}
+    asignacion
+  | declaracion
   | error                 {printf("en expresion\n"); /* !! quitar todos */}
   ;
 
 aritmetico:
     aritmetico '+' aritmetico
       {
-        /*$$ = $1 + $3;*/
         fprintf(
           obj, 
           "\tR0=I(R7);\n\tR1=I(R7+4);\n\tR0=R1+R0;\n\tR7=R7+4;\n\tI(R7)=R0;\n"
@@ -205,7 +195,6 @@ aritmetico:
       }
   | aritmetico '-' aritmetico
       {
-        /*$$ = $1 - $3;*/
         fprintf(
           obj, 
           "\tR0=I(R7);\n\tR1=I(R7+4);\n\tR0=R1-R0;\n\tR7=R7+4;\n\tI(R7)=R0;\n"
@@ -213,7 +202,6 @@ aritmetico:
       }
   | aritmetico '*' aritmetico
       {
-        /*$$ = $1 * $3;*/
         fprintf(
           obj, 
           "\tR0=I(R7);\n\tR1=I(R7+4);\n\tR0=R1*R0;\n\tR7=R7+4;\n\tI(R7)=R0;\n"
@@ -221,17 +209,15 @@ aritmetico:
       }
   | aritmetico '%' aritmetico
       {
-        /*$$ = $1 % $3;*/
         fprintf(
           obj, 
           "\tR0=I(R7);\n\tR1=I(R7+4);\n\tR0=R1%cR0;\n\tR7=R7+4;\n\tI(R7)=R0;\n",
           '%'
         );
       }
-  | aritmetico POTENCIA aritmetico  {/*$$ = pow($1, $3);*/}
+  | aritmetico POTENCIA aritmetico
   | '-' aritmetico
       {
-        /*$$ = -$2;*/
         fprintf(
           obj, 
           "\tR0=I(R7);\n\tR0=-R0;\n\tI(R7)=R0;\n"
@@ -239,7 +225,6 @@ aritmetico:
       }
   | INCREMENTO aritmetico
       {
-        /*$$ = $1 + 1;*/
         fprintf(
           obj, 
           "\tR0=I(R7);\n\tR0=R0+1;\n\tI(R7)=R0;\n"
@@ -247,14 +232,13 @@ aritmetico:
       }
   | DECREMENTO aritmetico
       {
-        /*$$ = $1 - 1;*/
         fprintf(
           obj, 
           "\tR0=I(R7);\n\tR0=R0-1;\n\tI(R7)=R0;\n"
         );
       }
-  | '(' aritmetico ')'              {/*$$ = $2; copia el struct*/}
-  | array '.' IDENTIF               {/*if(strcmp($3, "length") != 0) yyerror("Propiedad inesperada\n");*/}
+  | '(' aritmetico ')'
+  | array '.' IDENTIF
   | ENTERO
       { 
         fprintf(obj, "\tR7=R7-4;\n\tI(R7)=%d;\n", $1);
@@ -264,7 +248,7 @@ aritmetico:
         struct reg *p = buscat($1, varl);
 
         if (p!=NULL) 
-          fprintf(obj, "\tR0=I(R6%d);\n\tR7=R7-4;\n\tP(R7)=R0;\n", p->dir); // quitar la P() por I()
+          fprintf(obj, "\tR0=I(R6%d);\n\tR7=R7-4;\n\tP(R7)=R0;\n", p->dir);
         else {
           p = buscat($1,varg);
           if (p!=NULL) fprintf(obj, "\tR0=I(0x%x);\n\tR7=R7-4;\n\tP(R7)=R0;\n", p->dir);
@@ -283,7 +267,6 @@ real:
       }
   | real '-' real
       {
-        /*$$ = $1 - $3;*/
         fprintf(
           obj, 
           "\tRR0=D(R7);\n\tRR1=D(R7+8);\n\tRR0=RR1-RR0;\n\tR7=R7+8;\n\tD(R7)=RR0;\n"
@@ -291,7 +274,6 @@ real:
       }
   | real '*' real
       {
-        /*$$ = $1 * $3;*/
         fprintf(
           obj, 
           "\tRR0=D(R7);\n\tRR1=D(R7+8);\n\tRR0=RR1*RR0;\n\tR7=R7+8;\n\tD(R7)=RR0;\n"
@@ -299,7 +281,6 @@ real:
       }
   | real '/' real
       {
-        /*$$ = $1 / $3;*/
         fprintf(
           obj, 
           "\tRR0=D(R7);\n\tRR1=D(R7+8);\n\tRR0=RR1/RR0;\n\tR7=R7+8;\n\tD(R7)=RR0;\n"
@@ -307,7 +288,6 @@ real:
       }
   | aritmetico '/' aritmetico
       {
-        /*$$ = $1 / $3;*/
         fprintf(
           obj, 
           "\tRR0=I(R7);\n\tRR1=I(R7+4);\n\tRR0=RR1/RR0;\n\tD(R7)=RR0;\n"
@@ -315,7 +295,6 @@ real:
       }
   | real '%' real
       {
-        /*$$ = $1 % $3;*/
         fprintf(
           obj, 
           "\tRR0=D(R7);\n\tRR1=D(R7+8);\n\tRR0=RR1%cRR0;\n\tR7=R7+8;\n\tD(R7)=RR0;\n",
@@ -325,7 +304,6 @@ real:
   | real POTENCIA real
   | '-' real
       {
-        /*$$ = -$2;*/
         fprintf(
           obj, 
           "\tRR0=D(R7);\n\tRR0=-RR0;\n\tD(R7)=RR0;\n"
@@ -333,7 +311,6 @@ real:
       }
   | INCREMENTO real
       {
-        /*$$ = $1 + 1;*/
         fprintf(
           obj, 
           "\tRR0=D(R7);\n\tRR0=RR0+1;\n\tD(R7)=RR0;\n"
@@ -341,7 +318,6 @@ real:
       }
   | DECREMENTO real
       {
-        /*$$ = $1 - 1;*/
         fprintf(
           obj, 
           "\tRR0=D(R7);\n\tRR0=RR0-1;\n\tD(R7)=RR0;\n"
@@ -372,7 +348,6 @@ real:
 condicion:
     aritmetico '<' aritmetico
       {
-        /*$$ = $1 < $3 ? 1 : 0;*/
         fprintf(
           obj,
           "\tR0=I(R7);\n\tR1=I(R7+4);\n\tR0=R1<R0;\n\tR7=R7+4;\n\tI(R7)=R0;\n"
@@ -380,7 +355,6 @@ condicion:
       }
   | aritmetico MNIG aritmetico
     {
-      /*$$ = $1 <= $3 ? 1 : 0;*/
         fprintf(
           obj,
           "\tR0=I(R7);\n\tR1=I(R7+4);\n\tR0=R1<=R0;\n\tR7=R7+4;\n\tI(R7)=R0;\n"
@@ -388,7 +362,6 @@ condicion:
     }
   | aritmetico '>' aritmetico
     {
-      /*$$ = $1 > $3 ? 1 : 0;*/
         fprintf(
           obj,
           "\tR0=I(R7);\n\tR1=I(R7+4);\n\tR0=R1>R0;\n\tR7=R7+4;\n\tI(R7)=R0;\n"
@@ -396,7 +369,6 @@ condicion:
     }
   | aritmetico MYIG aritmetico
     {
-      /*$$ = $1 >= $3 ? 1 : 0;*/
         fprintf(
           obj,
           "\tR0=I(R7);\n\tR1=I(R7+4);\n\tR0=R1>=R0;\n\tR7=R7+4;\n\tI(R7)=R0;\n"
@@ -404,7 +376,6 @@ condicion:
     }
   | aritmetico IGUAL aritmetico
     {
-      /*$$ = $1 == $3 ? 1 : 0;*/
         fprintf(
           obj,
           "\tR0=I(R7);\n\tR1=I(R7+4);\n\tR0=R1==R0;\n\tR7=R7+4;\n\tI(R7)=R0;\n"
@@ -412,7 +383,6 @@ condicion:
     }
   | aritmetico DESIGUAL aritmetico
       {
-        /*$$ = $1 != $3 ? 1 : 0;*/
         fprintf(
           obj,
           "\tR0=I(R7);\n\tR1=I(R7+4);\n\tR0=R1!=R0;\n\tR7=R7+4;\n\tI(R7)=R0;\n"
@@ -427,7 +397,6 @@ condicion:
       }
   | real MNIG real
     {
-      /*$$ = $1 <= $3 ? 1 : 0;*/
         fprintf(
           obj,
           "\tRR0=D(R7);\n\tRR1=D(R7+8);\n\tR0=RR1<=RR0;\n\tR7=R7+12;\n\tI(R7)=R0;\n"
@@ -435,7 +404,6 @@ condicion:
     }
   | real '>' real
     {
-      /*$$ = $1 > $3 ? 1 : 0;*/
         fprintf(
           obj,
           "\tRR0=D(R7);\n\tRR1=D(R7+8);\n\tR0=RR1>RR0;\n\tR7=R7+12;\n\tI(R7)=R0;\n"
@@ -443,7 +411,6 @@ condicion:
     }
   | real MYIG real
     {
-      /*$$ = $1 >= $3 ? 1 : 0;*/
         fprintf(
           obj,
           "\tRR0=D(R7);\n\tRR1=D(R7+8);\n\tR0=RR1>=RR0;\n\tR7=R7+12;\n\tI(R7)=R0;\n"
@@ -451,7 +418,6 @@ condicion:
     }
   | real IGUAL real
     {
-      /*$$ = $1 == $3 ? 1 : 0;*/
         fprintf(
           obj,
           "\tRR0=D(R7);\n\tRR1=D(R7+8);\n\tR0=RR1==RR0;\n\tR7=R7+12;\n\tI(R7)=R0;\n"
@@ -459,7 +425,6 @@ condicion:
     }
   | real DESIGUAL real
       {
-        /*$$ = $1 != $3 ? 1 : 0;*/
         fprintf(
           obj,
           "\tRR0=D(R7);\n\tRR1=D(R7+8);\n\tR0=RR1!=RR0;\n\tR7=R7+12;\n\tI(R7)=R0;\n"
@@ -467,7 +432,6 @@ condicion:
       }
   | condicion AND condicion
       {
-        /*$$ = $1 && $3 ? 1 : 0;*/
         fprintf(
           obj,
           "\tR0=I(R7);\n\tR1=I(R7+4);\n\tR0=R1&&R0;\n\tR7=R7+4;\n\tI(R7)=R0;\n"
@@ -475,7 +439,6 @@ condicion:
       }
   | condicion OR condicion
       {
-        /*$$ = $1 || $3 ? 1 : 0;*/
         fprintf(
           obj,
           "\tR0=I(R7);\n\tR1=I(R7+4);\n\tR0=R1||R0;\n\tR7=R7+4;\n\tI(R7)=R0;\n"
@@ -483,7 +446,6 @@ condicion:
       }
   | '!' condicion
       {
-        /*$$ = ++$2 % 2;*/
         fprintf(
           obj,
           "\tR0=I(R7);\n\tR0=!R0;\n\tI(R7)=R0;\n"
@@ -492,7 +454,6 @@ condicion:
   | '(' condicion ')'
   | LOGICO                          
       {
-        /*$$ = $1;*/
         fprintf(obj, "\tR7=R7-4;\n\tI(R7)=%d;\n", $1);
       }
   | IDLOGICO
@@ -692,7 +653,7 @@ switch-bloque:
   ;
 
 switch-case:
-    CASE aritmetico ':' bloque  {/* se pueden identificadores?? */}
+    CASE aritmetico ':' bloque
   | CASE string ':' bloque
   | DEFAULT ':' bloque
   ;
@@ -807,10 +768,8 @@ params-uso:
 funcion-declaracion:
     tipo IDENTIF '(' ')' '{'
       {
-        // struct reg *t = buscat($1, tipo);
         $<rp>$ = buscat($1, tipo);
 
-        // if (t!=NULL) ins($2, rut, t);
         if ($<rp>$==NULL) yyerror("2: tipo inexistente"); 
         else {
           struct reg *p = insvr($2, rut, $<rp>$, ++et); 
@@ -828,14 +787,12 @@ funcion-declaracion:
         fprintf(obj, "\tR7=R6;\n\tR6=P(R7+4);\n\tR5=P(R7);\n\tGT(R5);\n");
       }
   | tipo IDENTIF '(' params-declaracion ')' '{'
-      { 
-        // struct reg *t = buscat($1, tipo);
+      {
         $<rp>$ = buscat($1, tipo);
 
-        // if (t!=NULL) ins($2, rut, t);
-        if ($<rp>$==NULL) yyerror("2: tipo inexistente"); 
+        if ($<rp>$==NULL) yyerror("2: tipo inexistente");
         else {
-          struct reg *p = insvr($2, rut, $<rp>$, ++et); 
+          struct reg *p = insvr($2, rut, $<rp>$, ++et);
           gl = varl;
           fm = 0;
           fprintf(obj, "L %d:\tR6=R7;\n", p->dir);
@@ -873,33 +830,9 @@ int main(int argc, char** argv) {
 }
 
 void yyerror(char* mens) {
-  //yydebug = 1;
   dump("ERROR");
-  // fprintf (stderr, "%s\n", s);
-  //printf("Error en linea %i: %s \n", numlin, mens);
   fprintf(obj, "\n!!! error %s (lin %d) !!!\n\n", mens, numlin);
   fprintf(stderr, "Error %s (lin %d)\n", mens, numlin);
-  //if (strcmp(mens, "syntax error")==0) exit(1);
 }
 
 void yywrap() {}
-
-// Funciones propias
-double resto(double a, double b) {
-  double res = a < 0 ? -a : a;
-  double b_ = b < 0 ? -b : b;
-
-  while (res >= 0) {
-    res = res - b_;
-  }
-  return res + b_;
-}
-
-// char* strConcat(char* a, char* b) {
-//   char* res = (char*) malloc(sizeof(char) * (strlen(a) + strlen(b) - 1)); //-2+1
-
-//   strcpy(res, a.substr(0, strlen(a) - 2))
-//   strcpy(res, b.substr(0, strlen(b) - 2))
-
-//   return res;
-// }
