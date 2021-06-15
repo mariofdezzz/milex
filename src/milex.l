@@ -89,7 +89,7 @@ letdig  {letra}|{digito}
 "!="                    {return DESIGUAL;}
 [-+=*/%<>!.]            {return yytext[0];}
 [;:,(){}[\]]            {return yytext[0];}
-\n                      {numlin++; BEGIN(LEELIN); return yytext[0];} 
+\n                      {numlin++; BEGIN(LEELIN);} 
 [ \t]                           {}
 "//".*                          {}
 "/*"([^*]|(\*+[^*/]))*\*+"/"    {}

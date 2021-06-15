@@ -108,8 +108,6 @@ FILE *obj;
 
 %%
 prog:
-    '\n'
-  | '\n' prog
   | '{' 
       {
         fprintf(obj, "L 0:\tR7=0x%x;\n", sm);
@@ -124,15 +122,8 @@ prog:
   ;
 
 bloque:
-    '\n'              {}
-  | '\n' bloque       {}
-  | sentencia         {}
+    sentencia         {}
   | sentencia bloque  {}
-  ;
-
-salto:
-    '\n'
-  | '\n' salto
   ;
 
 expr:
@@ -642,34 +633,21 @@ switch-case:
   ;
 
 for: 
-    FOR '(' for-inicial ';'
+    FOR '(' expresion ';'
       {
         $<entero>$ = ++et;
         fprintf(obj, "L %d:\n", et);
       }
-    for-condicion ';'
+    condicion ';'
       {
         $<entero>$ = ++et;
         fprintf(obj, "\tR0=I(R7);\n\tIF(!R0) GT(%d);\n", $<entero>$);
       }
-    for-final ')'
+    expresion ')'
     sentbloq
       {
         fprintf(obj, "GT(%d);\n\tL %d:\t", $<entero>5, $<entero>8);
       }
-  ;
-
-for-inicial:
-    '\n' for-inicial
-  | expresion
-  ;
-for-condicion:
-    '\n' for-condicion
-  | condicion
-  ;
-for-final:
-    '\n' for-final
-  | expresion
   ;
 
 for-in:
@@ -741,19 +719,28 @@ funcion-uso:
   ;
 
 params-uso:
-    '\n'
-  | '\n' params-uso
-  | IDENTIF
+    IDENTIF
   | IDENTIF espacio-vacio
   | IDENTIF ',' params-uso
   ;
 
 ret:
-  | RETURN salto
-  | RETURN '\n' bloque
+      {
+        if ($<rp>-1 != voidp)
+          yyerror("6: rutina tiene que retornar valor");
+      }
+  | RETURN
+      {
+        if ($<rp>-1 != voidp)
+          yyerror("6: rutina tiene que retornar valor");
+      }
   | RETURN expr
-  | RETURN expr salto
-  | RETURN expr '\n' bloque
+      {
+        if ($<rp>-1 == voidp)
+          yyerror("6: rutina void no puede retornar valor");
+        else
+          fprintf(obj, "\tR0=I(R7);\n\tR7=R7+4;\n");
+      }
   ;
 
 funcion-declaracion:
@@ -770,14 +757,7 @@ funcion-declaracion:
         }
         gl=varl;
       } 
-    bloque ret 
-      {
-        if ($<rp>6==voidp)
-          yyerror("6: rutina void no puede retornar valor");
-		    else 
-          fprintf(obj, "\tR0=I(R7);\n\tR7=R7+4;\n");
-      } 
-    '}' 
+    bloque ret '}'
       {
         dump($2);
         finbloq();
@@ -807,9 +787,7 @@ funcion-declaracion:
   ;
 
 params-declaracion:
-    '\n'
-  | '\n' params-declaracion
-  | tipo IDENTIF
+    tipo IDENTIF
   | tipo IDENTIF espacio-vacio
   | tipo IDENTIF ',' params-declaracion
   ;
