@@ -1,5 +1,5 @@
 
-F = test/ejgc.f
+F = test/pruebas.m
 O = dist/obj.q.c
 
 # Comands
