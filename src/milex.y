@@ -5,7 +5,7 @@
 #include <string.h>
 #include <stddef.h>
 
-#include "../libraries/ts.h"
+#include "ts.h"
 #include "Qlib.h"
 
 extern FILE *yyin;   /* declarado en lexico */

@@ -2,7 +2,7 @@
 #include "milex.tab.h"
 #include <stdio.h>
 #include <stdbool.h>
-#include "../libraries/ts.h"
+#include "ts.h"
 
 int numlin = 1;
 extern FILE *obj; 
