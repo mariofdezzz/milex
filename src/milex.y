@@ -23,6 +23,7 @@ int fm;
 int et = 0;
 
 struct reg *voidp;
+struct reg *rp;
 
 void inits() {
   inst("void", 0);
@@ -734,28 +735,31 @@ params-uso:
   ;
 
 ret:
+    RETURN
       {
-        if ($<rp>-1 != voidp)
-          yyerror("6: rutina tiene que retornar valor");
-      }
-  | RETURN
-      {
-        if ($<rp>-1 != voidp)
+        if (rp != NULL && rp != voidp)
           yyerror("6: rutina tiene que retornar valor");
       }
   | RETURN expr
       {
-        if ($<rp>-1 == voidp)
+        if (rp != NULL && rp == voidp)
           yyerror("6: rutina void no puede retornar valor");
         else
           fprintf(obj, "\tR0=I(R7);\n\tR7=R7+4;\n");
       }
   ;
 
+bloqret:
+    bloque
+  | ret 
+  | ret bloque
+  ;
+
 funcion-declaracion:
     tipo IDENTIF '(' ')' '{'
       {
         $<rp>$ = buscat($1, tipo);
+        rp = $<rp>$;
 
         if ($<rp>$==NULL) yyerror("2: tipo inexistente"); 
         else {
@@ -766,7 +770,7 @@ funcion-declaracion:
         }
         gl=varl;
       } 
-    bloque ret '}'
+    bloqret '}'
       {
         dump($2);
         finbloq();
