@@ -57,7 +57,7 @@ letdig  {letra}|{digito}
 "new"                   { return NEW; }
 "print"                 { return PRINT; }
 "println"               { return PRINTLN; }
-{letra}({letdig}|[-_])* { 
+{letra}({letdig}|[_])* { 
                             yylval.symbol = strdup(yytext);
                             struct reg *p = buscat(yytext, varl);
                             if (p!=NULL) {
