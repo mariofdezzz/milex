@@ -607,14 +607,23 @@ if:
           et
         );
       }
-    sentbloq
-      {
-        fprintf(obj, "L %d:\n", $<entero>5);
-      }
-    else
+    sentbloq else
   ;
 
-else: | ELSE sentbloq ;
+else: 
+      {
+        fprintf(obj, "L %d:\tR7=R7+4;\n", $<entero>-1);
+      }
+  | ELSE
+      {
+        $<entero>$ = ++et;
+        fprintf(obj, "\tGT(%d);\nL %d:\n", $<entero>$, $<entero>-1);
+      }
+    sentbloq 
+      {
+        fprintf(obj, "L %d:\tR7=R7+4;\n", $<entero>2);
+      }
+  ;
 
 switch:
     SWITCH '(' aritmetico ')' '{' espacio-vacio switch-bloque '}'       {}
