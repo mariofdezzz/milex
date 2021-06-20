@@ -198,18 +198,92 @@ aritmetico:
           "\tR0=I(R7);\n\tR0=-R0;\n\tI(R7)=R0;\n"
         );
       }
-  | INCREMENTO aritmetico
+  | INCREMENTO IDENTERO
       {
+        // Se busca la variable
+        struct reg *p = buscat($2, varl);
+
+        if (p!=NULL) 
+          fprintf(obj, "\tR0=I(R6%d);\n\tR1=R6%d;\n", p->dir, p->dir);
+        else {
+          p = buscat($1,varg);
+
+          if (p!=NULL) // Revisar
+            fprintf(obj, "\tR0=I(0x%x);\n\tR1=0x%x;\n", p->dir, p->dir);
+          else 
+            yyerror("3: variable no declarada"); 
+        }
+
+        // Se modifica la variable
         fprintf(
           obj, 
-          "\tR0=I(R7);\n\tR0=R0+1;\n\tI(R7)=R0;\n"
+          "\tR0=R0+1;\n\tR7=R7-4;\n\tI(R7)=R0;\n\tI(R1)=R0;\n"
         );
       }
-  | DECREMENTO aritmetico
+  | IDENTERO INCREMENTO
       {
+        // Se busca la variable
+        struct reg *p = buscat($1, varl);
+
+        if (p!=NULL) 
+          fprintf(obj, "\tR0=I(R6%d);\n\tR1=R6%d;\n", p->dir, p->dir);
+        else {
+          p = buscat($1,varg);
+
+          if (p!=NULL) // Revisar
+            fprintf(obj, "\tR0=I(0x%x);\n\tR1=0x%x;\n", p->dir, p->dir);
+          else 
+            yyerror("3: variable no declarada"); 
+        }
+
+        // Se modifica la variable
         fprintf(
           obj, 
-          "\tR0=I(R7);\n\tR0=R0-1;\n\tI(R7)=R0;\n"
+          "\tR7=R7-4;\n\tI(R7)=R0;\n\tR0=R0+1;\n\tI(R1)=R0;\n"
+        );
+      }
+  | DECREMENTO IDENTERO
+      {
+        // Se busca la variable
+        struct reg *p = buscat($2, varl);
+
+        if (p!=NULL) 
+          fprintf(obj, "\tR0=I(R6%d);\n\tR1=R6%d;\n", p->dir, p->dir);
+        else {
+          p = buscat($1,varg);
+
+          if (p!=NULL) // Revisar
+            fprintf(obj, "\tR0=I(0x%x);\n\tR1=0x%x;\n", p->dir, p->dir);
+          else 
+            yyerror("3: variable no declarada"); 
+        }
+
+        // Se modifica la variable
+        fprintf(
+          obj, 
+          "\tR0=R0-1;\n\tR7=R7-4;\n\tI(R7)=R0;\n\tI(R1)=R0;\n"
+        );
+      }
+  | IDENTERO DECREMENTO
+      {
+        // Se busca la variable
+        struct reg *p = buscat($1, varl);
+
+        if (p!=NULL) 
+          fprintf(obj, "\tR0=I(R6%d);\n\tR1=R6%d;\n", p->dir, p->dir);
+        else {
+          p = buscat($1,varg);
+
+          if (p!=NULL) // Revisar
+            fprintf(obj, "\tR0=I(0x%x);\n\tR1=0x%x;\n", p->dir, p->dir);
+          else 
+            yyerror("3: variable no declarada"); 
+        }
+
+        // Se modifica la variable
+        fprintf(
+          obj, 
+          "\tR7=R7-4;\n\tI(R7)=R0;\n\tR0=R0-1;\n\tI(R1)=R0;\n"
         );
       }
   | '(' aritmetico ')'
