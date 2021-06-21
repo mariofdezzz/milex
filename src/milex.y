@@ -167,12 +167,11 @@ dcl-variable:
 dcl-funcion:
     tipo IDENTIF '(' ')' '{'
       {
-        $<rp>$ = buscat($1, tipo);
-        rp = $<rp>$;
+        rp = buscat($1, tipo);
 
-        if ($<rp>$==NULL) yyerror("2: tipo inexistente"); 
+        if (rp==NULL) yyerror("2: tipo inexistente"); 
         else {
-          struct reg *p = insvr($2, rut, $<rp>$, ++et); 
+          struct reg *p = insvr($2, rut, rp, ++et); 
           gl = varl;
           fm = 0;
           fprintf(obj, "L %d:\tR6=R7;\n", p->dir);
@@ -181,6 +180,7 @@ dcl-funcion:
       } 
     bloque '}'
       { // Incluir el return, parametros, recusividad
+        rp = NULL;
         dump($2);
         finbloq();
         gl=varg;
@@ -358,6 +358,12 @@ prn-expresion:
     entero
   | logico
   | exp-funcion
+      {
+        if ($1->tip != voidp)
+          fprintf(obj, "\tR7=R7-4;\n\tI(R7)=R0;\n");
+        else
+          yyerror("7: rutina void no invocable en expresion");
+      }
   ;
 
 exp-funcion: 
@@ -402,6 +408,12 @@ expresion:
         $$ = buscat("bool", tipo);
       }
   | exp-funcion
+      {
+        if ($1->tip != voidp)
+          fprintf(obj, "\tR7=R7-4;\n\tI(R7)=R0;\n");
+        else
+          yyerror("7: rutina void no invocable en expresion");
+      }
   ;
 
 entero:
@@ -775,9 +787,27 @@ sen-especial:
   ;
 
 return:
-    RETURN
+    RETURN ';'
       {
-        // TODO: + return expresion
+        if (rp != NULL)
+          if (rp == voidp)
+            fprintf(obj, "\tR7=R6;\n\tR6=P(R7+4);\n\tR5=P(R7);\n\tGT(R5);\n");
+          else
+            yyerror("6: rutina tiene que retornar valor");
+        else
+          yyerror("6: programa no puede retornar");
+      }
+  | RETURN expresion
+      {
+        if (rp != NULL)
+          if (rp != voidp) {
+            fprintf(obj, "\tR0=I(R7);\n\tR7=R7+4;\n");
+            fprintf(obj, "\tR7=R6;\n\tR6=P(R7+4);\n\tR5=P(R7);\n\tGT(R5);\n");
+          } 
+          else
+            yyerror("6: rutina void no puede retornar valor");
+        else
+          yyerror("6: programa no puede retornar");
       }
   ;
 
