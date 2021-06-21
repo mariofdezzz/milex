@@ -45,21 +45,17 @@ letdig  {letra}|{digito}
 ("int"|"float"|"bool"|"string")"[]"     {  yylval.symbol = strdup(yytext); return ARRAY; }
 "if"                    { return IF; }
 "else"                  { return ELSE; }
-"switch"                { return SWITCH; }
-"case"                  { return CASE; }
-"default"               { return DEFAULT; }
 "for"                   { return FOR; }
-"in"                    { return IN; }
 "while"                 { return WHILE; }
 "break"                 { return BREAK; }
 "continue"              { return CONTINUE; }
 "return"                { return RETURN; }
-"new"                   { return NEW; }
 "print"                 { return PRINT; }
 "println"               { return PRINTLN; }
 {letra}({letdig}|[_])* { 
                             yylval.symbol = strdup(yytext);
                             struct reg *p = buscat(yytext, varl);
+
                             if (p!=NULL) {
                                 switch(p->tip->id[0]) {
                                     case 'f': return IDREAL;
@@ -67,8 +63,8 @@ letdig  {letra}|{digito}
                                     case 'b': return IDLOGICO;
                                 }
                             } else {
-                                p = buscat(yytext, varg);
                                 if (p!=NULL) {
+                                    printf("%s\n", p->tip->id);
                                     switch(p->tip->id[0]) {
                                         case 'f': return IDREAL;
                                         case 'i': return IDENTERO;
