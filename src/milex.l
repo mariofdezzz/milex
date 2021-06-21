@@ -63,8 +63,9 @@ letdig  {letra}|{digito}
                                     case 'b': return IDLOGICO;
                                 }
                             } else {
+                                p = buscat(yytext, varg);
+
                                 if (p!=NULL) {
-                                    printf("%s\n", p->tip->id);
                                     switch(p->tip->id[0]) {
                                         case 'f': return IDREAL;
                                         case 'i': return IDENTERO;
