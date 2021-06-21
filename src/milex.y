@@ -26,7 +26,7 @@ struct reg *rp;
 void inits() {
   inst("void", 0);
   voidp = top;
-  inst("bool", 1);
+  inst("bool", 4);
   inst("int", 4);
   inst("float", 8);
 }
@@ -218,7 +218,7 @@ asg-variable:
         struct reg *t = $4;
 
         if (t->id[0] == 'f')
-          fprintf(obj, "\tRR0=D(R7);\n\tR1=P(R7+8);\n\tD(R1)=RR0;\n\tR7=R7+16;\n");
+          fprintf(obj, "\tRR0=D(R7);\n\tR1=P(R7+8);\n\tD(R1)=RR0;\n\tR7=R7+12;\n");
         else
           fprintf(obj, "\tR0=I(R7);\n\tR1=P(R7+4);\n\tI(R1)=R0;\n\tR7=R7+4;\n");
       }
@@ -252,7 +252,7 @@ asg-variable:
         struct reg *t = $5;
 
         if (t->id[0] == 'f')
-          fprintf(obj, "\tRR0=D(R7);\n\tR1=P(R7+8);\n\tD(R1)=RR0;\n\tR7=R7+16;\n");
+          fprintf(obj, "\tRR0=D(R7);\n\tR1=P(R7+8);\n\tD(R1)=RR0;\n\tR7=R7+12;\n");
         else
           fprintf(obj, "\tR0=I(R7);\n\tR1=P(R7+4);\n\tI(R1)=R0;\n\tR7=R7+4;\n");
       }
@@ -543,8 +543,11 @@ entero:
           fprintf(obj, "\tR0=I(R6%d);\n\tR7=R7-4;\n\tP(R7)=R0;\n", p->dir);
         else {
           p = buscat($1,varg);
-          if (p!=NULL) fprintf(obj, "\tR0=I(0x%x);\n\tR7=R7-4;\n\tP(R7)=R0;\n", p->dir);
-          else yyerror("5: variable no declarada"); 
+
+          if (p!=NULL) 
+            fprintf(obj, "\tR0=I(0x%x);\n\tR7=R7-4;\n\tP(R7)=R0;\n", p->dir);
+          else 
+            yyerror("5: variable no declarada"); 
         }
       }
   ;
@@ -750,10 +753,18 @@ logico:
       }
   | IDLOGICO
       { 
-        if (
-          buscat($1, varg) == NULL && 
-          buscat($1, varl)==NULL
-        ) yyerror("5: variable no declarada"); 
+        struct reg *p = buscat($1, varl);
+
+        if (p!=NULL) 
+          fprintf(obj, "\tR0=I(R6%d);\n\tR7=R7-4;\n\tP(R7)=R0;\n", p->dir);
+        else {
+          p = buscat($1,varg);
+
+          if (p!=NULL) 
+            fprintf(obj, "\tR0=I(0x%x);\n\tR7=R7-4;\n\tP(R7)=R0;\n", p->dir);
+          else 
+            yyerror("5: variable no declarada"); 
+        }
       }
   ;
 
@@ -774,7 +785,7 @@ id:
     IDENTERO  { $$ = $1; }
   | IDREAL    { $$ = $1; }
   | IDLOGICO  { $$ = $1; }
-  | IDENTIF   { $$ = $1; /*milex no encuentra -> a fuerza con esto*/ }
+  | IDENTIF   { $$ = $1; /*declaracion + asignacion => identif todavia no esta en la tabla*/ }
   ;
 
 tipo:

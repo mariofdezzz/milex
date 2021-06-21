@@ -1,10 +1,8 @@
 
-void f() {
-  int d 
-  d = 21
-  
-  println(d)
-}
+
+
 {
-  f()
+  float p = 3. / 4.
+
+  println(p)
 }
