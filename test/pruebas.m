@@ -1,16 +1,22 @@
 
-int g
+float n
 
-int f() {
-  if (g<5){
-    println(g)
-    g = ++g
-    return g + 2
-    f()
-  }
+float fibo() {
+  if (n <= 1.) return n
+
+  float temp = n
+  
+  n = temp - 1.
+  float x = fibo()
+  
+  n = temp - 2.
+  float y = fibo()
+
+  return x + y
 }
 
 {
-  g = 0
-  println(f())
+  n = 9.
+
+  println(fibo())
 }

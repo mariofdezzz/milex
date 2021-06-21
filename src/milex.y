@@ -331,38 +331,26 @@ for:
   ;
 
 print:
-    PRINT '(' prn-expresion ')'
+    PRINT '(' expresion ')'
       {
+        struct reg *t = $3;
         ++et;
-        fprintf(obj, "\tR5=%d;\n\tGT(print);\nL %d:\tR7=R7+4;\n", et, et); 
-      }
-  | PRINTLN '(' prn-expresion ')'
-      {
-        ++et;
-        fprintf(obj, "\tR5=%d;\n\tGT(println);\nL %d:\tR7=R7+4;\n", et, et);
-          
-      }
-  | PRINT '(' real ')'
-      {
-        ++et;
-        fprintf(obj, "\tR5=%d;\n\tGT(printd);\nL %d:\tR7=R7+4;\n", et, et); 
-      }
-  | PRINTLN '(' real ')'
-      {
-        ++et;
-        fprintf(obj, "\tR5=%d;\n\tGT(printlnd);\nL %d:\tR7=R7+8;\n", et, et);
-      }
-  ;
 
-prn-expresion:
-    entero
-  | logico
-  | exp-funcion
-      {
-        if ($1->tip != voidp)
-          fprintf(obj, "\tR7=R7-4;\n\tI(R7)=R0;\n");
+        if (t->id[0] == 'f')
+          fprintf(obj, "\tR5=%d;\n\tGT(printd);\nL %d:\tR7=R7+4;\n", et, et);
         else
-          yyerror("7: rutina void no invocable en expresion");
+          fprintf(obj, "\tR5=%d;\n\tGT(print);\nL %d:\tR7=R7+4;\n", et, et);
+      }
+  | PRINTLN '(' expresion ')'
+      {
+        struct reg *t = $3;
+        ++et;
+
+        if (t->id[0] == 'f')
+          fprintf(obj, "\tR5=%d;\n\tGT(printlnd);\nL %d:\tR7=R7+8;\n", et, et);
+        else
+          fprintf(obj, "\tR5=%d;\n\tGT(println);\nL %d:\tR7=R7+4;\n", et, et);
+          
       }
   ;
 
@@ -409,8 +397,13 @@ expresion:
       }
   | exp-funcion
       {
+        $$ = $1->tip;
+
         if ($1->tip != voidp)
-          fprintf(obj, "\tR7=R7-4;\n\tI(R7)=R0;\n");
+          if ($1->tip->id[0] == 'f')
+            fprintf(obj, "\tR7=R7-8;\n\tI(R7)=RR0;\n");
+          else
+            fprintf(obj, "\tR7=R7-4;\n\tI(R7)=R0;\n");
         else
           yyerror("7: rutina void no invocable en expresion");
       }
@@ -801,7 +794,11 @@ return:
       {
         if (rp != NULL)
           if (rp != voidp) {
-            fprintf(obj, "\tR0=I(R7);\n\tR7=R7+4;\n");
+            if (rp->id[0] == 'f')
+              fprintf(obj, "\tRR0=D(R7);\n\tR7=R7+8;\n");
+            else
+              fprintf(obj, "\tR0=I(R7);\n\tR7=R7+4;\n");
+            
             fprintf(obj, "\tR7=R6;\n\tR6=P(R7+4);\n\tR5=P(R7);\n\tGT(R5);\n");
           } 
           else
