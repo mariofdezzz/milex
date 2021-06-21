@@ -722,15 +722,24 @@ for:
         $<entero>$ = ++et;
         fprintf(obj, "L %d:\n", et);
       }
-    condicion ';'
+    condicion
       {
         $<entero>$ = ++et;
         fprintf(obj, "\tR0=I(R7);\n\tIF(!R0) GT(%d);\n", $<entero>$);
       }
+    ';'
+      {
+        et = et + 2;
+        $<entero>$ = et;
+        fprintf(obj, "\tGT(%d);\nL %d:\n", et - 1, et);
+      }
     expresion ')'
+      {
+        fprintf(obj, "\tGT(%d);\nL %d:\n", $<entero>5, et - 1);
+      }
     sentbloq
       {
-        fprintf(obj, "GT(%d);\n\tL %d:\t", $<entero>5, $<entero>8);
+        fprintf(obj, "\tGT(%d);\nL %d:\n", $<entero>9, $<entero>7);
       }
   ;
 
