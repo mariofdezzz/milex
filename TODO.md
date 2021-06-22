@@ -4,3 +4,5 @@
 [ ] Revisar numeracion yyerror
 [ ] Corregir precision en los float
 [ ] Corregir donde se puede utilizar expresion y exp-funcion
+[ ] Comprobar concordancia de params entre exp y dcl de funcion
+[ ] Comprobar ejemplos antes de enviar

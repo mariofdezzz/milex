@@ -92,6 +92,7 @@ FILE *obj;
 // %type <entero> if
 %type <rp> exp-funcion
 %type <entero> params-uso
+%type <entero> params-declaracion
 
 /* Precedencia */
 %left AND OR
@@ -214,6 +215,7 @@ params-declaracion:
     tipo IDENTIF
       {
         struct reg *t = buscat($1, tipo);
+        $$ = 8 + t->tam;
 
         int d = fm + 8;
 
@@ -222,15 +224,18 @@ params-declaracion:
         else
           yyerror("1: tipo inexistente");
       }
-  | tipo IDENTIF ',' params-declaracion {
-    // check if param is declared in varl (arreglar)
-        struct reg *p = buscat($1, varl);
-
-        if (p!=NULL)
-          fprintf(obj, "\tR7=R7-4;\n\tR0=R6%d;\n\tP(R7)=R0;\n", p->dir);
-        else 
-          yyerror("3: variable no declarada");
-    }
+  | tipo IDENTIF ',' params-declaracion 
+      {
+        struct reg *t = buscat($1, tipo);
+        $$ = $4 + t->tam;
+        
+        int d = fm + $4;
+        
+        if (t!=NULL && t!=voidp)
+          insvr($2, varl, t, d);
+        else
+          yyerror("1: tipo inexistente");
+      }
   ;
 
 asg-variable:
@@ -427,9 +432,12 @@ exp-funcion:
 params-uso:
     expresion
       {
-        $$ = 4;
+        $$ = $1->tam;
       }
-  | IDENTIF ',' params-uso
+  | expresion ',' params-uso
+      {
+        $$ = $1->tam + $3;
+      }
   ;
 
 expresion:
@@ -479,6 +487,13 @@ entero:
         fprintf(
           obj, 
           "\tR0=I(R7);\n\tR1=I(R7+4);\n\tR0=R1*R0;\n\tR7=R7+4;\n\tI(R7)=R0;\n"
+        );
+      }
+  | entero '/' entero
+      {
+        fprintf(
+          obj, 
+          "\tR0=I(R7);\n\tR1=I(R7+4);\n\tR0=R1/R0;\n\tR7=R7+4;\n\tI(R7)=R0;\n"
         );
       }
   | entero '%' entero
@@ -696,11 +711,14 @@ real:
         struct reg *p = buscat($1, varl);
 
         if (p!=NULL) 
-          fprintf(obj, "\tRR0=D(R6%d);\n\tR7=R7-8;\n\tD(R7)=RR0;\n", p->dir);
+          if (p->dir < 0)
+            fprintf(obj, "\tRR0=D(R6%d);\n\tR7=R7-8;\n\tD(R7)=RR0;\n", p->dir);
+          else
+            fprintf(obj, "\tRR0=D(R6+%d);\n\tR7=R7-8;\n\tD(R7)=RR0;\n", p->dir);
         else {
           p = buscat($1,varg);
 
-          if (p!=NULL) 
+          if (p!=NULL) // añadir variante +
             fprintf(obj, "\tRR0=D(0x%x);\n\tR7=R7-8;\n\tD(R7)=RR0;\n", p->dir);
           else 
             yyerror("5: variable no declarada"); 
