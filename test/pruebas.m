@@ -1,10 +1,11 @@
 
 int f(int i) {
+  return 2
 
 }
 
 {
-  float i = 1.2
+  int i = 1
 
   println(f(i))
 }

@@ -902,10 +902,13 @@ return:
       {
         if (rp != NULL)
           if (rp != voidp) {
-            if (rp->id[0] == 'f')
-              fprintf(obj, "\tRR0=D(R7);\n\tR7=R7+8;\n");
+            if (rp->id[0] != $2->id[0])
+              yyerror("0: no se retorna el tipo de valor esperado");
             else
-              fprintf(obj, "\tR0=I(R7);\n\tR7=R7+4;\n");
+              if (rp->id[0] == 'f')
+                fprintf(obj, "\tRR0=D(R7);\n\tR7=R7+8;\n");
+              else
+                fprintf(obj, "\tR0=I(R7);\n\tR7=R7+4;\n");
             
             fprintf(obj, "\tR7=R6;\n\tR6=P(R7+4);\n\tR5=P(R7);\n\tGT(R5);\n");
           } 
