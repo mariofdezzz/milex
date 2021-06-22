@@ -4,7 +4,7 @@
 [ ] Permitir i++ suelto
 [ ] Revisar numeracion yyerror
 [ ] Corregir precision en los float
-[ ] Corregir donde se puede utilizar expresion y exp-funcion
+[X] Corregir donde se puede utilizar expresion y exp-funcion
 [ ] Comprobar concordancia de params entre exp y dcl de funcion
 [ ] Comprobar ejemplos antes de enviar
 [ ] declaracion de globales utilizar dos valores en pila = valor + ptr mem
