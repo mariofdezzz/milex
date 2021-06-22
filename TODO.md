@@ -1,7 +1,7 @@
 
 [x] Tercer parametro de for se ejecuta al final de la iteracion
-[ ] Tercer parametro de for no admite i++
-[ ] Permitir i++ suelto
+[X] Tercer parametro de for no admite i++
+[X] Permitir i++ suelto
 [ ] Revisar numeracion yyerror
 [ ] Corregir precision en los float
 [X] Corregir donde se puede utilizar expresion y exp-funcion

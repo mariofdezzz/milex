@@ -129,6 +129,7 @@ sentencia:
   | sen-especial
   | exp-funcion
   | print
+  | incdec
   ;
 
 sentbloq:
@@ -370,7 +371,7 @@ for:
         $<entero>$ = et;
         fprintf(obj, "\tGT(%d);\nL %d:\n", et - 1, et);
       }
-    asg-variable ')'
+    end-for ')'
       {
         fprintf(obj, "\tGT(%d);\nL %d:\n", $<entero>5, et - 1);
       }
@@ -378,6 +379,11 @@ for:
       {
         fprintf(obj, "\tGT(%d);\nL %d:\n", $<entero>9, $<entero>7);
       }
+  ;
+
+end-for:
+    asg-variable
+  | incdec
   ;
 
 print:
@@ -538,7 +544,7 @@ expresion:
       }
   | expresion '<' expresion
       {
-        $$ = $1;
+        $$ = buscat("bool", tipo);
         
         if ($1->id[0] != $3->id[0])
           yyerror("0: tipos no compatibles");
@@ -553,7 +559,7 @@ expresion:
       }
   | expresion '>' expresion
       {
-        $$ = $1;
+        $$ = buscat("bool", tipo);
         
         if ($1->id[0] != $3->id[0])
           yyerror("0: tipos no compatibles");
@@ -568,7 +574,7 @@ expresion:
       }
   | expresion MNIG expresion
       {
-        $$ = $1;
+        $$ = buscat("bool", tipo);
         
         if ($1->id[0] != $3->id[0])
           yyerror("0: tipos no compatibles");
@@ -583,7 +589,7 @@ expresion:
       }
   | expresion MYIG expresion
       {
-        $$ = $1;
+        $$ = buscat("bool", tipo);
         
         if ($1->id[0] != $3->id[0])
           yyerror("0: tipos no compatibles");
@@ -598,7 +604,7 @@ expresion:
       }
   | expresion IGUAL expresion
       {
-        $$ = $1;
+        $$ = buscat("bool", tipo);
         
         if ($1->id[0] != $3->id[0])
           yyerror("0: tipos no compatibles");
@@ -613,7 +619,7 @@ expresion:
       }
   | expresion DESIGUAL expresion
       {
-        $$ = $1;
+        $$ = buscat("bool", tipo);
         
         if ($1->id[0] != $3->id[0])
           yyerror("0: tipos no compatibles");

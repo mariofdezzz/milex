@@ -4,6 +4,10 @@ float sum(float x, float y) {
 }
 
 {
-  int i = i++
-  println(i)
+  int i = 1
+  println(i++ + i++)
+  
+  for(int j=0; j<10; j++) { 
+    println(j)
+  }
 }
