@@ -91,6 +91,7 @@ FILE *obj;
 %type <symbol> id
 // %type <entero> if
 %type <rp> exp-funcion
+%type <entero> params-uso
 
 /* Precedencia */
 %left AND OR
@@ -147,7 +148,7 @@ est-control:
 
 dcl-variable:
     tipo IDENTIF
-      {
+      { // Cambiar IDENTIF por id
         struct reg *t = buscat($1, tipo);
 
         int d;
@@ -165,7 +166,7 @@ dcl-variable:
   ;
 
 dcl-funcion:
-    tipo IDENTIF '(' ')' '{'
+    tipo IDENTIF '('
       {
         rp = buscat($1, tipo);
 
@@ -178,7 +179,7 @@ dcl-funcion:
         }
         gl=varl;
       } 
-    bloque '}'
+    ')' '{' bloque '}'
       { // Incluir el return, parametros, recusividad
         rp = NULL;
         dump($2);
@@ -186,15 +187,50 @@ dcl-funcion:
         gl=varg;
         fprintf(obj, "\tR7=R6;\n\tR6=P(R7+4);\n\tR5=P(R7);\n\tGT(R5);\n");
       }
-  | tipo IDENTIF '(' params-declaracion ')' '{' bloque '}'
-    {
-      // TODO
-    }
+  | tipo IDENTIF '('
+      {
+        rp = buscat($1, tipo);
+
+        if (rp==NULL) yyerror("2: tipo inexistente"); 
+        else {
+          struct reg *p = insvr($2, rut, rp, ++et); 
+          gl = varl;
+          fm = 0;
+          fprintf(obj, "L %d:\tR6=R7;\n", p->dir);
+        }
+        gl=varl;
+      }
+    params-declaracion ')' '{' bloque '}'
+      { // Incluir el return, parametros, recusividad
+        rp = NULL;
+        dump($2);
+        finbloq();
+        gl=varg;
+        fprintf(obj, "\tR7=R6;\n\tR6=P(R7+4);\n\tR5=P(R7);\n\tGT(R5);\n");
+      }
   ;
 
 params-declaracion:
     tipo IDENTIF
-  | tipo IDENTIF ',' params-declaracion
+      {
+        struct reg *t = buscat($1, tipo);
+
+        int d = fm + 8;
+
+        if (t!=NULL && t!=voidp)
+          insvr($2, varl, t, d);
+        else
+          yyerror("1: tipo inexistente");
+      }
+  | tipo IDENTIF ',' params-declaracion {
+    // check if param is declared in varl (arreglar)
+        struct reg *p = buscat($1, varl);
+
+        if (p!=NULL)
+          fprintf(obj, "\tR7=R7-4;\n\tR0=R6%d;\n\tP(R7)=R0;\n", p->dir);
+        else 
+          yyerror("3: variable no declarada");
+    }
   ;
 
 asg-variable:
@@ -369,16 +405,30 @@ exp-funcion:
             et, $$->dir, et
           );
         }
-        if (buscat($1, rut) == NULL) yyerror("4: rutina no declarada");
+        if (buscat($1, rut) == NULL) yyerror("4: rutina no declarada"); // Necesario?
       }
   | IDENTIF '(' params-uso ')'
       {
-        // TODO
+        $$ = buscat($1, rut);
+
+        if ($$==NULL) 
+          yyerror("4: rutina no declarada"); 
+        else {
+          ++et;
+          fprintf(
+            obj, 
+            "\tR7=R7-8;\n\tP(R7+4)=R6;\n\tP(R7)=%d;\n\tGT(%d);\nL %d:\tR7=R7+%d;\n", 
+            et, $$->dir, et, 8 + $3
+          );
+        }
       }
   ;
 
 params-uso:
-    IDENTIF
+    expresion
+      {
+        $$ = 4;
+      }
   | IDENTIF ',' params-uso
   ;
 
@@ -545,7 +595,10 @@ entero:
         struct reg *p = buscat($1, varl);
 
         if (p!=NULL) 
-          fprintf(obj, "\tR0=I(R6%d);\n\tR7=R7-4;\n\tP(R7)=R0;\n", p->dir);
+          if (p->dir < 0)
+            fprintf(obj, "\tR0=I(R6%d);\n\tR7=R7-4;\n\tP(R7)=R0;\n", p->dir); // I y P ?? Lo dudo
+          else
+            fprintf(obj, "\tR0=I(R6+%d);\n\tR7=R7-4;\n\tP(R7)=R0;\n", p->dir); // I y P ?? Lo dudo
         else {
           p = buscat($1,varg);
 
@@ -554,6 +607,16 @@ entero:
           else 
             yyerror("5: variable no declarada"); 
         }
+      }
+  | exp-funcion
+      {
+        if ($1->tip != voidp)
+          if ($1->tip->id[0] == 'i')
+            fprintf(obj, "\tR7=R7-8;\n\tI(R7)=R0;\n");
+          else
+            yyerror("6: tipos no compatibles");
+        else
+          yyerror("7: rutina void no invocable en expresion");
       }
   ;
 
