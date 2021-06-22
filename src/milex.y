@@ -93,6 +93,7 @@ FILE *obj;
 %type <symbol> id
 // %type <entero> if
 %type <rp> exp-funcion
+%type <rp> incdec
 %type <entero> params-uso
 %type <entero> params-declaracion
 
@@ -162,7 +163,9 @@ dcl-variable:
         if (t!=NULL && t!=voidp) {
           insvr($2, gl, t, d);
 
-		      if (gl==varl) 
+		      if (t->id[0] == 'f')
+            fprintf(obj, "\tR7=R7-8;\n");
+          else
             fprintf(obj, "\tR7=R7-4;\n");
         }
         else yyerror("1: tipo inexistente");
@@ -266,7 +269,7 @@ asg-variable:
 
         if (t->id[0] == $<rp>2->tip->id[0])
           if (t->id[0] == 'f')
-            fprintf(obj, "\tRR0=D(R7);\n\tR1=P(R7+8);\n\tD(R1)=RR0;\n\tR7=R7+12;\n");
+            fprintf(obj, "\tRR0=D(R7);\n\tR1=P(R7+8);\n\tD(R1)=RR0;\n\tR7=R7+12;\n"); // !!
           else
             fprintf(obj, "\tR0=I(R7);\n\tR1=P(R7+4);\n\tI(R1)=R0;\n\tR7=R7+4;\n");
         else
@@ -285,7 +288,9 @@ asg-variable:
         if (t!=NULL && t!=voidp) {
           insvr($2, gl, t, d);
 
-		      if (gl==varl) 
+		      if (t->id[0] == 'f')
+            fprintf(obj, "\tR7=R7-8;\n");
+          else
             fprintf(obj, "\tR7=R7-4;\n");
         }
         else yyerror("1: tipo inexistente");
@@ -293,7 +298,6 @@ asg-variable:
 
         // Asignacion
         if (gl==varg)
-          // No ocurre nunca pq no existe declaracion + asignacion en global
           fprintf(obj, "\tR7=R7-4;\n\tP(R7)=0x%x;\n", d);
         else
           fprintf(obj, "\tR7=R7-4;\n\tR0=R6%d;\n\tP(R7)=R0;\n", d);
@@ -771,7 +775,7 @@ expresion:
       }
   | incdec
       { // Mover codigo a asg-variable retornando en $$ el tamaño de tipo
-        $$ = buscat("int", tipo);
+        $$ = $1;
       }
   | exp-funcion
       {
@@ -790,6 +794,8 @@ expresion:
 incdec:
    INCREMENTO IDENTERO
       {
+        $$ = buscat("int", tipo);
+
         // Se busca la variable
         struct reg *p = buscat($2, varl);
 
@@ -815,6 +821,8 @@ incdec:
       }
   | IDENTERO INCREMENTO
       {
+        $$ = buscat("int", tipo);
+        
         // Se busca la variable
         struct reg *p = buscat($1, varl);
 
@@ -840,6 +848,8 @@ incdec:
       }
   | DECREMENTO IDENTERO
       {
+        $$ = buscat("int", tipo);
+        
         // Se busca la variable
         struct reg *p = buscat($2, varl);
 
@@ -865,6 +875,8 @@ incdec:
       }
   | IDENTERO DECREMENTO
       {
+        $$ = buscat("int", tipo);
+        
         // Se busca la variable
         struct reg *p = buscat($1, varl);
 
@@ -886,6 +898,114 @@ incdec:
         fprintf(
           obj, 
           "\tR7=R7-4;\n\tI(R7)=R0;\n\tR0=R0-1;\n\tI(R1)=R0;\n"
+        );
+      }
+  | INCREMENTO IDREAL
+      {
+        $$ = buscat("float", tipo);
+        
+        // Se busca la variable
+        struct reg *p = buscat($2, varl);
+
+        if (p!=NULL) 
+          if (p->dir < 0)
+            fprintf(obj, "\tRR0=D(R6%d);\n\tR1=R6%d;\n", p->dir, p->dir);
+          else
+            fprintf(obj, "\tRR0=D(R6+%d);\n\tR1=R6+%d;\n", p->dir, p->dir);
+        else {
+          p = buscat($2,varg);
+
+          if (p!=NULL) // Revisar
+            fprintf(obj, "\tRR0=D(0x%x);\n\tR1=0x%x;\n", p->dir, p->dir);
+          else 
+            yyerror("3: variable no declarada"); 
+        }
+
+        // Se modifica la variable
+        fprintf(
+          obj, 
+          "\tRR0=RR0+1;\n\tR7=R7-8;\n\tD(R7)=RR0;\n\tD(R1)=RR0;\n"
+        );
+      }
+  | IDREAL INCREMENTO
+      {
+        $$ = buscat("float", tipo);
+        
+        // Se busca la variable
+        struct reg *p = buscat($1, varl);
+
+        if (p!=NULL) 
+          if (p->dir < 0)
+            fprintf(obj, "\tRR0=D(R6%d);\n\tR1=R6%d;\n", p->dir, p->dir);
+          else
+            fprintf(obj, "\tRR0=D(R6+%d);\n\tR1=R6+%d;\n", p->dir, p->dir);
+        else {
+          p = buscat($1,varg);
+
+          if (p!=NULL) // Revisar
+            fprintf(obj, "\tRR0=D(0x%x);\n\tR1=0x%x;\n", p->dir, p->dir);
+          else 
+            yyerror("3: variable no declarada"); 
+        }
+
+        // Se modifica la variable
+        fprintf(
+          obj, 
+          "\tR7=R7-8;\n\tD(R7)=RR0;\n\tRR0=RR0+1;\n\tD(R1)=RR0;\n"
+        );
+      }
+  | DECREMENTO IDREAL
+      {
+        $$ = buscat("float", tipo);
+        
+        // Se busca la variable
+        struct reg *p = buscat($2, varl);
+
+        if (p!=NULL) 
+          if (p->dir < 0)
+            fprintf(obj, "\tRR0=D(R6%d);\n\tR1=R6%d;\n", p->dir, p->dir);
+          else
+            fprintf(obj, "\tRR0=D(R6+%d);\n\tR1=R6+%d;\n", p->dir, p->dir);
+        else {
+          p = buscat($2,varg);
+
+          if (p!=NULL) // Revisar
+            fprintf(obj, "\tRR0=D(0x%x);\n\tR1=0x%x;\n", p->dir, p->dir);
+          else 
+            yyerror("3: variable no declarada"); 
+        }
+
+        // Se modifica la variable
+        fprintf(
+          obj, 
+          "\tRR0=RR0-1;\n\tR7=R7-8;\n\tD(R7)=RR0;\n\tD(R1)=RR0;\n"
+        );
+      }
+  | IDREAL DECREMENTO
+      {
+        $$ = buscat("float", tipo);
+        
+        // Se busca la variable
+        struct reg *p = buscat($1, varl);
+
+        if (p!=NULL) 
+          if (p->dir < 0)
+            fprintf(obj, "\tRR0=D(R6%d);\n\tR1=R6%d;\n", p->dir, p->dir);
+          else
+            fprintf(obj, "\tRR0=D(R6+%d);\n\tR1=R6+%d;\n", p->dir, p->dir);
+        else {
+          p = buscat($1,varg);
+
+          if (p!=NULL) // Revisar
+            fprintf(obj, "\tRR0=D(0x%x);\n\tR1=0x%x;\n", p->dir, p->dir);
+          else 
+            yyerror("3: variable no declarada"); 
+        }
+
+        // Se modifica la variable
+        fprintf(
+          obj, 
+          "\tR7=R7-8;\n\tD(R7)=RR0;\n\tRR0=RR0-1;\n\tD(R1)=RR0;\n"
         );
       }
   ;

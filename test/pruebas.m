@@ -1,10 +1,15 @@
 
-int f(int i) {
-  i++
+void f () {
+  int k = 0
 }
-
 {
-  int i = 1
+  int x = 0
+  float i = 0.
 
-  f(i)
+  println(++i)
+  println(i++)
+  println(i)
+  println(--i)
+  println(i--)
+  println(i)
 }
