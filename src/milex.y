@@ -19,6 +19,7 @@ enum categ gl = varg;
 int sm = 0x12000;
 int fm;
 int et = 0;
+int eb = -2;
 
 struct reg *voidp;
 struct reg *rp = NULL;
@@ -342,12 +343,14 @@ while:
         if ($4->id[0] != 'b')
           yyerror("0: expresion debe ser de tipo logico");
 
-        $<entero>$ = ++et;
-        fprintf(obj, "\tR0=I(R7);\n\tIF(!R0) GT(%d);\n", $<entero>$);
+        $<entero>$ = eb;
+        eb = ++et;
+        fprintf(obj, "\tR0=I(R7);\n\tIF(!R0) GT(%d);\n", eb);
       }
     sentbloq
       {
-        fprintf(obj, "GT(%d);\n\tL %d:\t", $<entero>2, $<entero>6);
+        fprintf(obj, "GT(%d);\n\tL %d:\t", $<entero>2, eb);
+        eb = $<entero>6;
       }
   ;
 
@@ -362,8 +365,9 @@ for:
         if ($6->id[0] != 'b')
           yyerror("0: expresion debe ser de tipo logico");
 
-        $<entero>$ = ++et;
-        fprintf(obj, "\tR0=I(R7);\n\tIF(!R0) GT(%d);\n", $<entero>$);
+        $<entero>$ = eb;
+        eb = ++et;
+        fprintf(obj, "\tR0=I(R7);\n\tIF(!R0) GT(%d);\n", et);
       }
     ';'
       {
@@ -377,7 +381,8 @@ for:
       }
     sentbloq
       {
-        fprintf(obj, "\tGT(%d);\nL %d:\n", $<entero>9, $<entero>7);
+        fprintf(obj, "\tGT(%d);\nL %d:\n", $<entero>9, eb);
+        eb = $<entero>7;
       }
   ;
 
@@ -857,6 +862,9 @@ incdec:
 
 sen-especial:
     BREAK
+      {
+        fprintf(obj, "\tGT(%d);\n", eb);
+      }
   | CONTINUE
   | return
   ;
