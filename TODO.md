@@ -9,4 +9,4 @@
 [ ] Comprobar ejemplos antes de enviar
 [X] declaracion de globales utilizar dos valores en pila = valor + ptr mem
 [ ] return obligatorio
-[ ] break y continue
+[X] break y continue
