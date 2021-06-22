@@ -168,7 +168,7 @@ dcl-variable:
           else
             fprintf(obj, "\tR7=R7-4;\n");
         }
-        else yyerror("1: tipo inexistente");
+        else yyerror("1.1: tipo inexistente");
       }
   ;
 
@@ -177,7 +177,7 @@ dcl-funcion:
       {
         rp = buscat($1, tipo);
 
-        if (rp==NULL) yyerror("2: tipo inexistente"); 
+        if (rp == NULL) yyerror("1.2: tipo de retorno inexistente"); 
         else {
           struct reg *p = insvr($2, rut, rp, ++et); 
           gl = varl;
@@ -198,7 +198,7 @@ dcl-funcion:
       {
         rp = buscat($1, tipo);
 
-        if (rp==NULL) yyerror("2: tipo inexistente"); 
+        if (rp==NULL) yyerror("1.2: tipo de retorno inexistente"); 
         else {
           struct reg *p = insvr($2, rut, rp, ++et); 
           gl = varl;
@@ -228,7 +228,7 @@ params-declaracion:
         if (t!=NULL && t!=voidp)
           insvr($2, varl, t, d);
         else
-          yyerror("1: tipo inexistente");
+          yyerror("1.1: tipo inexistente");
       }
   | tipo IDENTIF ',' params-declaracion 
       {
@@ -240,7 +240,7 @@ params-declaracion:
         if (t!=NULL && t!=voidp)
           insvr($2, varl, t, d);
         else
-          yyerror("1: tipo inexistente");
+          yyerror("1.1: tipo inexistente");
       }
   ;
 
@@ -260,7 +260,7 @@ asg-variable:
             fprintf(obj, "\tR7=R7-4;\n\tP(R7)=0x%x;\n", p->dir);
           } 
           else 
-            yyerror("3: variable no declarada"); 
+            yyerror("2.1: variable no declarada"); 
         }
       }
     '=' expresion
@@ -273,7 +273,7 @@ asg-variable:
           else
             fprintf(obj, "\tR0=I(R7);\n\tR1=P(R7+4);\n\tI(R1)=R0;\n\tR7=R7+4;\n");
         else
-          yyerror("0: tipos incompatibles");
+          yyerror("1.3: tipos no compatibles");
       }
   | tipo IDENTIF
       {
@@ -293,7 +293,7 @@ asg-variable:
           else
             fprintf(obj, "\tR7=R7-4;\n");
         }
-        else yyerror("1: tipo inexistente");
+        else yyerror("1.1: tipo inexistente");
 
 
         // Asignacion
@@ -312,7 +312,7 @@ asg-variable:
           else
             fprintf(obj, "\tR0=I(R7);\n\tR1=P(R7+4);\n\tI(R1)=R0;\n\tR7=R7+4;\n");
         else
-          yyerror("0: tipos incompatibles");
+          yyerror("1.3: tipos no compatibles");
       }
   ;
 
@@ -320,7 +320,7 @@ if:
     IF '(' expresion ')'
       {
         if ($3->id[0] != 'b')
-          yyerror("0: expresion debe ser de tipo logico");
+          yyerror("1.4: se espera una expresion logica");
 
         $<entero>$ = ++et;
         fprintf(
@@ -357,7 +357,7 @@ while:
     '(' expresion ')'
       {
         if ($4->id[0] != 'b')
-          yyerror("0: expresion debe ser de tipo logico");
+          yyerror("1.4: se espera una expresion logica");
 
         $<entero>$ = eb;
         eb = ++et;
@@ -380,7 +380,7 @@ for:
     expresion
       {
         if ($6->id[0] != 'b')
-          yyerror("0: expresion debe ser de tipo logico");
+          yyerror("1.4: se espera una expresion logica");
 
         $<entero>$ = eb;
         eb = ++et;
@@ -440,7 +440,7 @@ exp-funcion:
         $$ = buscat($1, rut);
         
         if ($$==NULL) 
-          yyerror("4: rutina no declarada"); 
+          yyerror("2.2: rutina no declarada"); 
         else {
           ++et;
           fprintf(
@@ -449,14 +449,13 @@ exp-funcion:
             et, $$->dir, et
           );
         }
-        if (buscat($1, rut) == NULL) yyerror("4: rutina no declarada"); // Necesario?
       }
   | IDENTIF '(' params-uso ')'
       {
         $$ = buscat($1, rut);
 
         if ($$==NULL) 
-          yyerror("4: rutina no declarada"); 
+          yyerror("2.2: rutina no declarada"); 
         else {
           ++et;
           fprintf(
@@ -485,14 +484,14 @@ expresion:
         $$ = $1;
         
         if ($1->id[0] != $3->id[0])
-          yyerror("0: tipos incompatibles");
+          yyerror("1.3: tipos no compatibles");
         else {
           if ($1->id[0] == 'f')
             fprintf(obj, "\tRR0=D(R7);\n\tRR1=D(R7+8);\n\tRR0=RR1+RR0;\n\tR7=R7+8;\n\tD(R7)=RR0;\n");
           else if ($1->id[0] == 'i')
             fprintf(obj, "\tR0=I(R7);\n\tR1=I(R7+4);\n\tR0=R1+R0;\n\tR7=R7+4;\n\tI(R7)=R0;\n");
           else
-            yyerror("0: operador no compatible");
+            yyerror("1.5: operador no compatible");
         }
       }
   | expresion '-' expresion
@@ -500,14 +499,14 @@ expresion:
         $$ = $1;
         
         if ($1->id[0] != $3->id[0])
-          yyerror("0: tipos incompatibles");
+          yyerror("1.3: tipos no compatibles");
         else {
           if ($1->id[0] == 'f')
             fprintf(obj, "\tRR0=D(R7);\n\tRR1=D(R7+8);\n\tRR0=RR1-RR0;\n\tR7=R7+8;\n\tD(R7)=RR0;\n");
           else if ($1->id[0] == 'i')
             fprintf(obj, "\tR0=I(R7);\n\tR1=I(R7+4);\n\tR0=R1-R0;\n\tR7=R7+4;\n\tI(R7)=R0;\n");
           else
-            yyerror("0: operador no compatible");
+            yyerror("1.5: operador no compatible");
         }
       }
   | expresion '*' expresion
@@ -515,14 +514,14 @@ expresion:
         $$ = $1;
         
         if ($1->id[0] != $3->id[0])
-          yyerror("0: tipos incompatibles");
+          yyerror("1.3: tipos no compatibles");
         else {
           if ($1->id[0] == 'f')
             fprintf(obj, "\tRR0=D(R7);\n\tRR1=D(R7+8);\n\tRR0=RR1*RR0;\n\tR7=R7+8;\n\tD(R7)=RR0;\n");
           else if ($1->id[0] == 'i')
             fprintf(obj, "\tR0=I(R7);\n\tR1=I(R7+4);\n\tR0=R1*R0;\n\tR7=R7+4;\n\tI(R7)=R0;\n");
           else
-            yyerror("0: operador no compatible");
+            yyerror("1.5: operador no compatible");
         }
       }
   | expresion '/' expresion
@@ -530,14 +529,14 @@ expresion:
         $$ = $1;
         
         if ($1->id[0] != $3->id[0])
-          yyerror("0: tipos incompatibles");
+          yyerror("1.3: tipos no compatibles");
         else {
           if ($1->id[0] == 'f')
             fprintf(obj, "\tRR0=D(R7);\n\tRR1=D(R7+8);\n\tRR0=RR1/RR0;\n\tR7=R7+8;\n\tD(R7)=RR0;\n");
           else if ($1->id[0] == 'i')
             fprintf(obj, "\tR0=I(R7);\n\tR1=I(R7+4);\n\tR0=R1/R0;\n\tR7=R7+4;\n\tI(R7)=R0;\n");
           else
-            yyerror("0: operador no compatible");
+            yyerror("1.5: operador no compatible");
         }
       }
   | expresion '%' expresion
@@ -545,14 +544,14 @@ expresion:
         $$ = $1;
         
         if ($1->id[0] != $3->id[0])
-          yyerror("0: tipos no compatibles");
+          yyerror("1.3: tipos no compatibles");
         else {
           if ($1->id[0] == 'f')
             fprintf(obj, "\tRR0=D(R7);\n\tRR1=D(R7+8);\n\tRR0=RR1%cRR0;\n\tR7=R7+8;\n\tD(R7)=RR0;\n", '%');
           else if ($1->id[0] == 'i')
             fprintf(obj, "\tR0=I(R7);\n\tR1=I(R7+4);\n\tR0=R1%cR0;\n\tR7=R7+4;\n\tI(R7)=R0;\n", '%');
           else
-            yyerror("0: operador no compatible");
+            yyerror("1.5: operador no compatible");
         }
       }
   | '-' expresion
@@ -564,21 +563,21 @@ expresion:
         else if ($2->id[0] == 'i')
           fprintf(obj, "\tR0=I(R7);\n\tR0=-R0;\n\tI(R7)=R0;\n");
         else
-          yyerror("0: operador no compatible");
+          yyerror("1.5: operador no compatible");
       }
   | expresion '<' expresion
       {
         $$ = buscat("bool", tipo);
         
         if ($1->id[0] != $3->id[0])
-          yyerror("0: tipos no compatibles");
+          yyerror("1.3: tipos no compatibles");
         else {
           if ($1->id[0] == 'f')
             fprintf(obj, "\tRR0=D(R7);\n\tRR1=D(R7+8);\n\tR0=RR1<RR0;\n\tR7=R7+12;\n\tI(R7)=R0;\n");
           else if ($1->id[0] == 'i')
             fprintf(obj, "\tR0=I(R7);\n\tR1=I(R7+4);\n\tR0=R1<R0;\n\tR7=R7+4;\n\tI(R7)=R0;\n");
           else
-            yyerror("0: operador no compatible");
+            yyerror("1.5: operador no compatible");
         }
       }
   | expresion '>' expresion
@@ -586,14 +585,14 @@ expresion:
         $$ = buscat("bool", tipo);
         
         if ($1->id[0] != $3->id[0])
-          yyerror("0: tipos no compatibles");
+          yyerror("1.3: tipos no compatibles");
         else {
           if ($1->id[0] == 'f')
             fprintf(obj, "\tRR0=D(R7);\n\tRR1=D(R7+8);\n\tR0=RR1>RR0;\n\tR7=R7+12;\n\tI(R7)=R0;\n");
           else if ($1->id[0] == 'i')
             fprintf(obj, "\tR0=I(R7);\n\tR1=I(R7+4);\n\tR0=R1>R0;\n\tR7=R7+4;\n\tI(R7)=R0;\n");
           else
-            yyerror("0: operador no compatible");
+            yyerror("1.5: operador no compatible");
         }
       }
   | expresion MNIG expresion
@@ -601,14 +600,14 @@ expresion:
         $$ = buscat("bool", tipo);
         
         if ($1->id[0] != $3->id[0])
-          yyerror("0: tipos no compatibles");
+          yyerror("1.3: tipos no compatibles");
         else {
           if ($1->id[0] == 'f')
             fprintf(obj, "\tRR0=D(R7);\n\tRR1=D(R7+8);\n\tR0=RR1<=RR0;\n\tR7=R7+12;\n\tI(R7)=R0;\n");
           else if ($1->id[0] == 'i')
             fprintf(obj, "\tR0=I(R7);\n\tR1=I(R7+4);\n\tR0=R1<=R0;\n\tR7=R7+4;\n\tI(R7)=R0;\n");
           else
-            yyerror("0: operador no compatible");
+            yyerror("1.5: operador no compatible");
         }
       }
   | expresion MYIG expresion
@@ -616,14 +615,14 @@ expresion:
         $$ = buscat("bool", tipo);
         
         if ($1->id[0] != $3->id[0])
-          yyerror("0: tipos no compatibles");
+          yyerror("1.3: tipos no compatibles");
         else {
           if ($1->id[0] == 'f')
             fprintf(obj, "\tRR0=D(R7);\n\tRR1=D(R7+8);\n\tR0=RR1>=RR0;\n\tR7=R7+12;\n\tI(R7)=R0;\n");
           else if ($1->id[0] == 'i')
             fprintf(obj, "\tR0=I(R7);\n\tR1=I(R7+4);\n\tR0=R1>=R0;\n\tR7=R7+4;\n\tI(R7)=R0;\n");
           else
-            yyerror("0: operador no compatible");
+            yyerror("1.5: operador no compatible");
         }
       }
   | expresion IGUAL expresion
@@ -631,14 +630,14 @@ expresion:
         $$ = buscat("bool", tipo);
         
         if ($1->id[0] != $3->id[0])
-          yyerror("0: tipos no compatibles");
+          yyerror("1.3: tipos no compatibles");
         else {
           if ($1->id[0] == 'f')
             fprintf(obj, "\tRR0=D(R7);\n\tRR1=D(R7+8);\n\tR0=RR1==RR0;\n\tR7=R7+12;\n\tI(R7)=R0;\n");
           else if ($1->id[0] == 'i')
             fprintf(obj, "\tR0=I(R7);\n\tR1=I(R7+4);\n\tR0=R1==R0;\n\tR7=R7+4;\n\tI(R7)=R0;\n");
           else
-            yyerror("0: operador no compatible");
+            yyerror("1.5: operador no compatible");
         }
       }
   | expresion DESIGUAL expresion
@@ -646,14 +645,14 @@ expresion:
         $$ = buscat("bool", tipo);
         
         if ($1->id[0] != $3->id[0])
-          yyerror("0: tipos no compatibles");
+          yyerror("1.3: tipos no compatibles");
         else {
           if ($1->id[0] == 'f')
             fprintf(obj, "\tRR0=D(R7);\n\tRR1=D(R7+8);\n\tR0=RR1!=RR0;\n\tR7=R7+12;\n\tI(R7)=R0;\n");
           else if ($1->id[0] == 'i')
             fprintf(obj, "\tR0=I(R7);\n\tR1=I(R7+4);\n\tR0=R1!=R0;\n\tR7=R7+4;\n\tI(R7)=R0;\n");
           else
-            yyerror("0: operador no compatible");
+            yyerror("1.5: operador no compatible");
         }
       }
   | expresion AND expresion
@@ -661,12 +660,12 @@ expresion:
         $$ = $1;
         
         if ($1->id[0] != $3->id[0])
-          yyerror("0: tipos no compatibles");
+          yyerror("1.3: tipos no compatibles");
         else {
           if ($1->id[0] == 'b')
             fprintf(obj, "\tR0=I(R7);\n\tR1=I(R7+4);\n\tR0=R1&&R0;\n\tR7=R7+4;\n\tI(R7)=R0;\n");
           else
-            yyerror("0: operador no compatible");
+            yyerror("1.5: operador no compatible");
         }
       }
   | expresion OR expresion
@@ -674,12 +673,12 @@ expresion:
         $$ = $1;
         
         if ($1->id[0] != $3->id[0])
-          yyerror("0: tipos no compatibles");
+          yyerror("1.3: tipos no compatibles");
         else {
           if ($1->id[0] == 'b')
             fprintf(obj, "\tR0=I(R7);\n\tR1=I(R7+4);\n\tR0=R1||R0;\n\tR7=R7+4;\n\tI(R7)=R0;\n");
           else
-            yyerror("0: operador no compatible");
+            yyerror("1.5: operador no compatible");
         }
       }
   | '!' expresion
@@ -689,7 +688,7 @@ expresion:
         if ($2->id[0] == 'b')
           fprintf(obj, "\tR0=I(R7);\n\tR0=!R0;\n\tI(R7)=R0;\n");
         else
-          yyerror("0: operador no compatible");
+          yyerror("1.5: operador no compatible");
       }
   | '(' expresion ')'
       {
@@ -728,7 +727,7 @@ expresion:
           if (p!=NULL) 
             fprintf(obj, "\tR0=I(0x%x);\n\tR7=R7-4;\n\tI(R7)=R0;\n", p->dir);
           else 
-            yyerror("5: variable no declarada"); 
+            yyerror("2.1: variable no declarada"); 
         }
       }
   | IDREAL
@@ -749,7 +748,7 @@ expresion:
           if (p!=NULL) // añadir variante +
             fprintf(obj, "\tRR0=D(0x%x);\n\tR7=R7-8;\n\tD(R7)=RR0;\n", p->dir);
           else 
-            yyerror("5: variable no declarada"); 
+            yyerror("2.1: variable no declarada"); 
         }
       }
   | IDLOGICO
@@ -770,7 +769,7 @@ expresion:
           if (p!=NULL) 
             fprintf(obj, "\tR0=I(0x%x);\n\tR7=R7-4;\n\tI(R7)=R0;\n", p->dir);
           else 
-            yyerror("5: variable no declarada"); 
+            yyerror("2.1: variable no declarada"); 
         }
       }
   | incdec
@@ -787,7 +786,7 @@ expresion:
           else
             fprintf(obj, "\tR7=R7-4;\n\tI(R7)=R0;\n");
         else
-          yyerror("7: rutina void no invocable en expresion");
+          yyerror("3.1: rutina void no invocable en expresion");
       }
   ;
 
@@ -807,10 +806,10 @@ incdec:
         else {
           p = buscat($1,varg);
 
-          if (p!=NULL) // Revisar
+          if (p!=NULL)
             fprintf(obj, "\tR0=I(0x%x);\n\tR1=0x%x;\n", p->dir, p->dir);
           else 
-            yyerror("3: variable no declarada"); 
+            yyerror("2.1: variable no declarada"); 
         }
 
         // Se modifica la variable
@@ -834,10 +833,10 @@ incdec:
         else {
           p = buscat($1,varg);
 
-          if (p!=NULL) // Revisar
+          if (p!=NULL)
             fprintf(obj, "\tR0=I(0x%x);\n\tR1=0x%x;\n", p->dir, p->dir);
           else 
-            yyerror("3: variable no declarada"); 
+            yyerror("2.1: variable no declarada"); 
         }
 
         // Se modifica la variable
@@ -861,10 +860,10 @@ incdec:
         else {
           p = buscat($1,varg);
 
-          if (p!=NULL) // Revisar
+          if (p!=NULL)
             fprintf(obj, "\tR0=I(0x%x);\n\tR1=0x%x;\n", p->dir, p->dir);
           else 
-            yyerror("3: variable no declarada"); 
+            yyerror("2.1: variable no declarada"); 
         }
 
         // Se modifica la variable
@@ -888,10 +887,10 @@ incdec:
         else {
           p = buscat($1,varg);
 
-          if (p!=NULL) // Revisar
+          if (p!=NULL)
             fprintf(obj, "\tR0=I(0x%x);\n\tR1=0x%x;\n", p->dir, p->dir);
           else 
-            yyerror("3: variable no declarada"); 
+            yyerror("2.1: variable no declarada"); 
         }
 
         // Se modifica la variable
@@ -915,10 +914,10 @@ incdec:
         else {
           p = buscat($2,varg);
 
-          if (p!=NULL) // Revisar
+          if (p!=NULL)
             fprintf(obj, "\tRR0=D(0x%x);\n\tR1=0x%x;\n", p->dir, p->dir);
           else 
-            yyerror("3: variable no declarada"); 
+            yyerror("2.1: variable no declarada"); 
         }
 
         // Se modifica la variable
@@ -942,10 +941,10 @@ incdec:
         else {
           p = buscat($1,varg);
 
-          if (p!=NULL) // Revisar
+          if (p!=NULL)
             fprintf(obj, "\tRR0=D(0x%x);\n\tR1=0x%x;\n", p->dir, p->dir);
           else 
-            yyerror("3: variable no declarada"); 
+            yyerror("2.1: variable no declarada"); 
         }
 
         // Se modifica la variable
@@ -969,10 +968,10 @@ incdec:
         else {
           p = buscat($2,varg);
 
-          if (p!=NULL) // Revisar
+          if (p!=NULL)
             fprintf(obj, "\tRR0=D(0x%x);\n\tR1=0x%x;\n", p->dir, p->dir);
           else 
-            yyerror("3: variable no declarada"); 
+            yyerror("2.1: variable no declarada"); 
         }
 
         // Se modifica la variable
@@ -996,10 +995,10 @@ incdec:
         else {
           p = buscat($1,varg);
 
-          if (p!=NULL) // Revisar
+          if (p!=NULL)
             fprintf(obj, "\tRR0=D(0x%x);\n\tR1=0x%x;\n", p->dir, p->dir);
           else 
-            yyerror("3: variable no declarada"); 
+            yyerror("2.1: variable no declarada"); 
         }
 
         // Se modifica la variable
@@ -1029,16 +1028,16 @@ return:
           if (rp == voidp)
             fprintf(obj, "\tR7=R6;\n\tR6=P(R7+4);\n\tR5=P(R7);\n\tGT(R5);\n");
           else
-            yyerror("6: rutina tiene que retornar valor");
+            yyerror("3.2: rutina tiene que retornar valor");
         else
-          yyerror("6: programa no puede retornar");
+          yyerror("3.3: rutina void no puede retornar valor");
       }
   | RETURN expresion
       {
         if (rp != NULL)
           if (rp != voidp) {
             if (rp->id[0] != $2->id[0])
-              yyerror("0: no se retorna el tipo de valor esperado");
+              yyerror("3.4: se retorna un tipo no esperado");
             else
               if (rp->id[0] == 'f')
                 fprintf(obj, "\tRR0=D(R7);\n\tR7=R7+8;\n");
@@ -1048,9 +1047,9 @@ return:
             fprintf(obj, "\tR7=R6;\n\tR6=P(R7+4);\n\tR5=P(R7);\n\tGT(R5);\n");
           } 
           else
-            yyerror("6: rutina void no puede retornar valor");
+            yyerror("3.2: rutina tiene que retornar valor");
         else
-          yyerror("6: programa no puede retornar");
+          yyerror("3.3: rutina void no puede retornar valor");
       }
   ;
 
