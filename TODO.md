@@ -6,6 +6,8 @@
 [X] Corregir precision en los float
 [X] Corregir donde se puede utilizar expresion y exp-funcion
 [ ] Comprobar concordancia de params entre exp y dcl de funcion
+[X] Comprobar concordancia de params entre exp y dcl de asignacion
+[ ] Comprobar concordancia de params entre exp y dcl de return
 [ ] Comprobar ejemplos antes de enviar
 [X] declaracion de globales utilizar dos valores en pila = valor + ptr mem
 [ ] return obligatorio

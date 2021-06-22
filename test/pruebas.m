@@ -1,26 +1,10 @@
 
-float sum(float x, float y) {
-  return x + y
+int f(int i) {
+
 }
 
 {
-  int i=0
-  // while (i<10) {
-  //   println(i)
+  float i = 1.2
 
-  //   if (i>2 && i<5) {
-  //     i = 9
-  //     continue
-  //   }
-  //   i++
-  // }
-
-  for (int j=0; j<6; j++) {
-    if (j==3) continue
-    
-    println(j)
-  }
-
-  // break
-  // println(2222)
+  println(f(i))
 }

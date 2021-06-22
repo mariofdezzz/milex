@@ -246,13 +246,16 @@ asg-variable:
       {
         struct reg *p = buscat($1, varl);
 
-        if (p!=NULL) 
+        if (p!=NULL) {
+          $<rp>$ = p;
           fprintf(obj, "\tR7=R7-4;\n\tR0=R6%d;\n\tP(R7)=R0;\n", p->dir);
-        else {
+        } else {
           p = buscat($1,varg);
 
-          if (p!=NULL) 
+          if (p!=NULL) {
+            $<rp>$ = p;
             fprintf(obj, "\tR7=R7-4;\n\tP(R7)=0x%x;\n", p->dir);
+          } 
           else 
             yyerror("3: variable no declarada"); 
         }
@@ -261,15 +264,19 @@ asg-variable:
       {
         struct reg *t = $4;
 
-        if (t->id[0] == 'f')
-          fprintf(obj, "\tRR0=D(R7);\n\tR1=P(R7+8);\n\tD(R1)=RR0;\n\tR7=R7+12;\n");
+        if (t->id[0] == $<rp>2->tip->id[0])
+          if (t->id[0] == 'f')
+            fprintf(obj, "\tRR0=D(R7);\n\tR1=P(R7+8);\n\tD(R1)=RR0;\n\tR7=R7+12;\n");
+          else
+            fprintf(obj, "\tR0=I(R7);\n\tR1=P(R7+4);\n\tI(R1)=R0;\n\tR7=R7+4;\n");
         else
-          fprintf(obj, "\tR0=I(R7);\n\tR1=P(R7+4);\n\tI(R1)=R0;\n\tR7=R7+4;\n");
+          yyerror("0: tipos incompatibles");
       }
   | tipo IDENTIF
       {
         // Declaracion
         struct reg *t = buscat($1, tipo);
+        $<rp>$ = t;
 
         int d;
 		    if (gl==varg) d = sm -= t->tam;
@@ -295,10 +302,13 @@ asg-variable:
       {
         struct reg *t = $5;
 
-        if (t->id[0] == 'f')
-          fprintf(obj, "\tRR0=D(R7);\n\tR1=P(R7+8);\n\tD(R1)=RR0;\n\tR7=R7+12;\n");
+        if (t->id[0] == $<rp>3->id[0])
+          if (t->id[0] == 'f')
+            fprintf(obj, "\tRR0=D(R7);\n\tR1=P(R7+8);\n\tD(R1)=RR0;\n\tR7=R7+12;\n");
+          else
+            fprintf(obj, "\tR0=I(R7);\n\tR1=P(R7+4);\n\tI(R1)=R0;\n\tR7=R7+4;\n");
         else
-          fprintf(obj, "\tR0=I(R7);\n\tR1=P(R7+4);\n\tI(R1)=R0;\n\tR7=R7+4;\n");
+          yyerror("0: tipos incompatibles");
       }
   ;
 
