@@ -8,3 +8,4 @@
 [ ] Comprobar ejemplos antes de enviar
 [ ] declaracion de globales utilizar dos valores en pila = valor + ptr mem
 [ ] return obligatorio
+[ ] break y continue
