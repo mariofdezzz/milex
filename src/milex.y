@@ -694,15 +694,15 @@ expresion:
           $$ = p->tip;
           
           if (p->dir < 0)
-            fprintf(obj, "\tR0=I(R6%d);\n\tR7=R7-4;\n\tP(R7)=R0;\n", p->dir); // I y P ?? Lo dudo
+            fprintf(obj, "\tR0=I(R6%d);\n\tR7=R7-4;\n\tI(R7)=R0;\n", p->dir);
           else
-            fprintf(obj, "\tR0=I(R6+%d);\n\tR7=R7-4;\n\tP(R7)=R0;\n", p->dir); // I y P ?? Lo dudo
+            fprintf(obj, "\tR0=I(R6+%d);\n\tR7=R7-4;\n\tI(R7)=R0;\n", p->dir);
         } else {
           p = buscat($1,varg);
           $$ = p->tip;
 
           if (p!=NULL) 
-            fprintf(obj, "\tR0=I(0x%x);\n\tR7=R7-4;\n\tP(R7)=R0;\n", p->dir);
+            fprintf(obj, "\tR0=I(0x%x);\n\tR7=R7-4;\n\tI(R7)=R0;\n", p->dir);
           else 
             yyerror("5: variable no declarada"); 
         }
@@ -735,12 +735,13 @@ expresion:
         if (p!=NULL) {
           $$ = p->tip;
           
-          fprintf(obj, "\tR0=I(R6%d);\n\tR7=R7-4;\n\tP(R7)=R0;\n", p->dir);
+          fprintf(obj, "\tR0=I(R6%d);\n\tR7=R7-4;\n\tI(R7)=R0;\n", p->dir);
         } else {
           p = buscat($1,varg);
+          $$ = p->tip;
 
           if (p!=NULL) 
-            fprintf(obj, "\tR0=I(0x%x);\n\tR7=R7-4;\n\tP(R7)=R0;\n", p->dir);
+            fprintf(obj, "\tR0=I(0x%x);\n\tR7=R7-4;\n\tI(R7)=R0;\n", p->dir);
           else 
             yyerror("5: variable no declarada"); 
         }

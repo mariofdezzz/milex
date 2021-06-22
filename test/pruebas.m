@@ -4,6 +4,6 @@ float sum(float x, float y) {
 }
 
 {
-  float i = 2.123456789
+  float i = 2.12345678999999999
   println(i)
 }
