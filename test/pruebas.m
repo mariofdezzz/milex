@@ -5,17 +5,20 @@ float sum(float x, float y) {
 
 {
   int i=0
-  while (i<5) {
-    println(i)
+  // while (i<10) {
+  //   println(i)
 
-    if (i>2) break
-    i++
-  }
+  //   if (i>2 && i<5) {
+  //     i = 9
+  //     continue
+  //   }
+  //   i++
+  // }
 
-  for (int j=0; j<10; j++) {
-    println(j)
+  for (int j=0; j<6; j++) {
+    if (j==3) continue
     
-    if (j>2) break
+    println(j)
   }
 
   // break

@@ -20,6 +20,7 @@ int sm = 0x12000;
 int fm;
 int et = 0;
 int eb = -2;
+int ec = -2;
 
 struct reg *voidp;
 struct reg *rp = NULL;
@@ -183,7 +184,7 @@ dcl-funcion:
         gl=varl;
       } 
     ')' '{' bloque '}'
-      { // Incluir el return, parametros, recusividad
+      {
         rp = NULL;
         dump($2);
         finbloq();
@@ -335,7 +336,8 @@ else:
 while:
     WHILE
       {
-        $<entero>$ = ++et;
+        $<entero>$ = ec;
+        ec = ++et;
         fprintf(obj, "L %d:\n", et);
       }
     '(' expresion ')'
@@ -349,7 +351,8 @@ while:
       }
     sentbloq
       {
-        fprintf(obj, "GT(%d);\n\tL %d:\t", $<entero>2, eb);
+        fprintf(obj, "GT(%d);\n\tL %d:\t", ec, eb);
+        ec = $<entero>2;
         eb = $<entero>6;
       }
   ;
@@ -372,7 +375,8 @@ for:
     ';'
       {
         et = et + 2;
-        $<entero>$ = et;
+        $<entero>$ = ec;
+        ec = et;
         fprintf(obj, "\tGT(%d);\nL %d:\n", et - 1, et);
       }
     end-for ')'
@@ -381,8 +385,9 @@ for:
       }
     sentbloq
       {
-        fprintf(obj, "\tGT(%d);\nL %d:\n", $<entero>9, eb);
+        fprintf(obj, "\tGT(%d);\nL %d:\n", ec, eb);
         eb = $<entero>7;
+        ec = $<entero>9;
       }
   ;
 
@@ -866,6 +871,9 @@ sen-especial:
         fprintf(obj, "\tGT(%d);\n", eb);
       }
   | CONTINUE
+      {
+        fprintf(obj, "\tGT(%d);\n", ec);
+      }
   | return
   ;
 
