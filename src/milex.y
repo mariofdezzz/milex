@@ -755,7 +755,10 @@ expresion:
         if (p!=NULL) {
           $$ = p->tip;
           
-          fprintf(obj, "\tR0=I(R6%d);\n\tR7=R7-4;\n\tI(R7)=R0;\n", p->dir);
+          if (p->dir < 0)
+            fprintf(obj, "\tR0=I(R6%d);\n\tR7=R7-4;\n\tI(R7)=R0;\n", p->dir);
+          else
+            fprintf(obj, "\tR0=I(R6+%d);\n\tR7=R7-4;\n\tI(R7)=R0;\n", p->dir);
         } else {
           p = buscat($1,varg);
           $$ = p->tip;
@@ -791,7 +794,10 @@ incdec:
         struct reg *p = buscat($2, varl);
 
         if (p!=NULL) 
-          fprintf(obj, "\tR0=I(R6%d);\n\tR1=R6%d;\n", p->dir, p->dir);
+          if (p->dir < 0)
+            fprintf(obj, "\tR0=I(R6%d);\n\tR1=R6%d;\n", p->dir, p->dir);
+          else
+            fprintf(obj, "\tR0=I(R6+%d);\n\tR1=R6+%d;\n", p->dir, p->dir);
         else {
           p = buscat($1,varg);
 
@@ -813,7 +819,10 @@ incdec:
         struct reg *p = buscat($1, varl);
 
         if (p!=NULL) 
-          fprintf(obj, "\tR0=I(R6%d);\n\tR1=R6%d;\n", p->dir, p->dir);
+          if (p->dir < 0)
+            fprintf(obj, "\tR0=I(R6%d);\n\tR1=R6%d;\n", p->dir, p->dir);
+          else
+            fprintf(obj, "\tR0=I(R6+%d);\n\tR1=R6+%d;\n", p->dir, p->dir);
         else {
           p = buscat($1,varg);
 
@@ -835,7 +844,10 @@ incdec:
         struct reg *p = buscat($2, varl);
 
         if (p!=NULL) 
-          fprintf(obj, "\tR0=I(R6%d);\n\tR1=R6%d;\n", p->dir, p->dir);
+          if (p->dir < 0)
+            fprintf(obj, "\tR0=I(R6%d);\n\tR1=R6%d;\n", p->dir, p->dir);
+          else
+            fprintf(obj, "\tR0=I(R6+%d);\n\tR1=R6+%d;\n", p->dir, p->dir);
         else {
           p = buscat($1,varg);
 
@@ -857,7 +869,10 @@ incdec:
         struct reg *p = buscat($1, varl);
 
         if (p!=NULL) 
-          fprintf(obj, "\tR0=I(R6%d);\n\tR1=R6%d;\n", p->dir, p->dir);
+          if (p->dir < 0)
+            fprintf(obj, "\tR0=I(R6%d);\n\tR1=R6%d;\n", p->dir, p->dir);
+          else
+            fprintf(obj, "\tR0=I(R6+%d);\n\tR1=R6+%d;\n", p->dir, p->dir);
         else {
           p = buscat($1,varg);
 

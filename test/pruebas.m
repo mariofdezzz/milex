@@ -1,11 +1,10 @@
 
 int f(int i) {
-  return 2
-
+  i++
 }
 
 {
   int i = 1
 
-  println(f(i))
+  f(i)
 }
