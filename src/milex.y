@@ -679,7 +679,7 @@ expresion:
   | REAL
       {
         $$ = buscat("float", tipo);
-        fprintf(obj, "\tR7=R7-8;\n\tD(R7)=%lf;\n", $1);
+        fprintf(obj, "\tR7=R7-8;\n\tD(R7)=%.15f;\n", $1);
       }
   | LOGICO                          
       {
