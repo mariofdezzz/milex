@@ -1,22 +1,10 @@
-
-float n
-
-float fibo() {
-  if (n <= 1.) return n
-
-  float temp = n
+float fibo(float n) {
+  if (n <= 1.)
+    return n
   
-  n = temp - 1.
-  float x = fibo()
-  
-  n = temp - 2.
-  float y = fibo()
-
-  return x + y
+  return fibo(n-1.) + fibo(n-2.)
 }
 
 {
-  n = 9.
-
-  println(fibo())
+  println(fibo(15.))
 }
