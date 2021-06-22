@@ -300,8 +300,11 @@ asg-variable:
   ;
 
 if:
-    IF '(' logico ')'
+    IF '(' expresion ')'
       {
+        if ($3->id[0] != 'b')
+          yyerror("0: expresion debe ser de tipo logico");
+
         $<entero>$ = ++et;
         fprintf(
           obj, 
@@ -333,8 +336,11 @@ while:
         $<entero>$ = ++et;
         fprintf(obj, "L %d:\n", et);
       }
-    '(' logico ')'
+    '(' expresion ')'
       {
+        if ($4->id[0] != 'b')
+          yyerror("0: expresion debe ser de tipo logico");
+
         $<entero>$ = ++et;
         fprintf(obj, "\tR0=I(R7);\n\tIF(!R0) GT(%d);\n", $<entero>$);
       }
@@ -350,8 +356,11 @@ for:
         $<entero>$ = ++et;
         fprintf(obj, "L %d:\n", et);
       }
-    logico
+    expresion
       {
+        if ($6->id[0] != 'b')
+          yyerror("0: expresion debe ser de tipo logico");
+
         $<entero>$ = ++et;
         fprintf(obj, "\tR0=I(R7);\n\tIF(!R0) GT(%d);\n", $<entero>$);
       }
@@ -378,7 +387,7 @@ print:
         ++et;
 
         if (t->id[0] == 'f')
-          fprintf(obj, "\tR5=%d;\n\tGT(printd);\nL %d:\tR7=R7+4;\n", et, et);
+          fprintf(obj, "\tR5=%d;\n\tGT(printd);\nL %d:\tR7=R7+8;\n", et, et);
         else
           fprintf(obj, "\tR5=%d;\n\tGT(print);\nL %d:\tR7=R7+4;\n", et, et);
       }
@@ -441,17 +450,298 @@ params-uso:
   ;
 
 expresion:
-    entero
-      { // Mover codigo a asg-variable retornando en $$ el tamaño de tipo
-        $$ = buscat("int", tipo);
+    expresion '+' expresion
+      {
+        $$ = $1;
+        
+        if ($1->id[0] != $3->id[0])
+          yyerror("0: tipos incompatibles");
+        else {
+          if ($1->id[0] == 'f')
+            fprintf(obj, "\tRR0=D(R7);\n\tRR1=D(R7+8);\n\tRR0=RR1+RR0;\n\tR7=R7+8;\n\tD(R7)=RR0;\n");
+          else if ($1->id[0] == 'i')
+            fprintf(obj, "\tR0=I(R7);\n\tR1=I(R7+4);\n\tR0=R1+R0;\n\tR7=R7+4;\n\tI(R7)=R0;\n");
+          else
+            yyerror("0: operador no compatible");
+        }
       }
-  | real
+  | expresion '-' expresion
+      {
+        $$ = $1;
+        
+        if ($1->id[0] != $3->id[0])
+          yyerror("0: tipos incompatibles");
+        else {
+          if ($1->id[0] == 'f')
+            fprintf(obj, "\tRR0=D(R7);\n\tRR1=D(R7+8);\n\tRR0=RR1-RR0;\n\tR7=R7+8;\n\tD(R7)=RR0;\n");
+          else if ($1->id[0] == 'i')
+            fprintf(obj, "\tR0=I(R7);\n\tR1=I(R7+4);\n\tR0=R1-R0;\n\tR7=R7+4;\n\tI(R7)=R0;\n");
+          else
+            yyerror("0: operador no compatible");
+        }
+      }
+  | expresion '*' expresion
+      {
+        $$ = $1;
+        
+        if ($1->id[0] != $3->id[0])
+          yyerror("0: tipos incompatibles");
+        else {
+          if ($1->id[0] == 'f')
+            fprintf(obj, "\tRR0=D(R7);\n\tRR1=D(R7+8);\n\tRR0=RR1*RR0;\n\tR7=R7+8;\n\tD(R7)=RR0;\n");
+          else if ($1->id[0] == 'i')
+            fprintf(obj, "\tR0=I(R7);\n\tR1=I(R7+4);\n\tR0=R1*R0;\n\tR7=R7+4;\n\tI(R7)=R0;\n");
+          else
+            yyerror("0: operador no compatible");
+        }
+      }
+  | expresion '/' expresion
+      {
+        $$ = $1;
+        
+        if ($1->id[0] != $3->id[0])
+          yyerror("0: tipos incompatibles");
+        else {
+          if ($1->id[0] == 'f')
+            fprintf(obj, "\tRR0=D(R7);\n\tRR1=D(R7+8);\n\tRR0=RR1/RR0;\n\tR7=R7+8;\n\tD(R7)=RR0;\n");
+          else if ($1->id[0] == 'i')
+            fprintf(obj, "\tR0=I(R7);\n\tR1=I(R7+4);\n\tR0=R1/R0;\n\tR7=R7+4;\n\tI(R7)=R0;\n");
+          else
+            yyerror("0: operador no compatible");
+        }
+      }
+  | expresion '%' expresion
+      {
+        $$ = $1;
+        
+        if ($1->id[0] != $3->id[0])
+          yyerror("0: tipos no compatibles");
+        else {
+          if ($1->id[0] == 'f')
+            fprintf(obj, "\tRR0=D(R7);\n\tRR1=D(R7+8);\n\tRR0=RR1%cRR0;\n\tR7=R7+8;\n\tD(R7)=RR0;\n", '%');
+          else if ($1->id[0] == 'i')
+            fprintf(obj, "\tR0=I(R7);\n\tR1=I(R7+4);\n\tR0=R1%cR0;\n\tR7=R7+4;\n\tI(R7)=R0;\n", '%');
+          else
+            yyerror("0: operador no compatible");
+        }
+      }
+  | '-' expresion
+      {
+        $$ = $2;
+        
+        if ($2->id[0] == 'f')
+          fprintf(obj, "\tRR0=D(R7);\n\tRR0=-RR0;\n\tD(R7)=RR0;\n");
+        else if ($2->id[0] == 'i')
+          fprintf(obj, "\tR0=I(R7);\n\tR0=-R0;\n\tI(R7)=R0;\n");
+        else
+          yyerror("0: operador no compatible");
+      }
+  | expresion '<' expresion
+      {
+        $$ = $1;
+        
+        if ($1->id[0] != $3->id[0])
+          yyerror("0: tipos no compatibles");
+        else {
+          if ($1->id[0] == 'f')
+            fprintf(obj, "\tRR0=D(R7);\n\tRR1=D(R7+8);\n\tR0=RR1<RR0;\n\tR7=R7+12;\n\tI(R7)=R0;\n");
+          else if ($1->id[0] == 'i')
+            fprintf(obj, "\tR0=I(R7);\n\tR1=I(R7+4);\n\tR0=R1<R0;\n\tR7=R7+4;\n\tI(R7)=R0;\n");
+          else
+            yyerror("0: operador no compatible");
+        }
+      }
+  | expresion '>' expresion
+      {
+        $$ = $1;
+        
+        if ($1->id[0] != $3->id[0])
+          yyerror("0: tipos no compatibles");
+        else {
+          if ($1->id[0] == 'f')
+            fprintf(obj, "\tRR0=D(R7);\n\tRR1=D(R7+8);\n\tR0=RR1>RR0;\n\tR7=R7+12;\n\tI(R7)=R0;\n");
+          else if ($1->id[0] == 'i')
+            fprintf(obj, "\tR0=I(R7);\n\tR1=I(R7+4);\n\tR0=R1>R0;\n\tR7=R7+4;\n\tI(R7)=R0;\n");
+          else
+            yyerror("0: operador no compatible");
+        }
+      }
+  | expresion MNIG expresion
+      {
+        $$ = $1;
+        
+        if ($1->id[0] != $3->id[0])
+          yyerror("0: tipos no compatibles");
+        else {
+          if ($1->id[0] == 'f')
+            fprintf(obj, "\tRR0=D(R7);\n\tRR1=D(R7+8);\n\tR0=RR1<=RR0;\n\tR7=R7+12;\n\tI(R7)=R0;\n");
+          else if ($1->id[0] == 'i')
+            fprintf(obj, "\tR0=I(R7);\n\tR1=I(R7+4);\n\tR0=R1<=R0;\n\tR7=R7+4;\n\tI(R7)=R0;\n");
+          else
+            yyerror("0: operador no compatible");
+        }
+      }
+  | expresion MYIG expresion
+      {
+        $$ = $1;
+        
+        if ($1->id[0] != $3->id[0])
+          yyerror("0: tipos no compatibles");
+        else {
+          if ($1->id[0] == 'f')
+            fprintf(obj, "\tRR0=D(R7);\n\tRR1=D(R7+8);\n\tR0=RR1>=RR0;\n\tR7=R7+12;\n\tI(R7)=R0;\n");
+          else if ($1->id[0] == 'i')
+            fprintf(obj, "\tR0=I(R7);\n\tR1=I(R7+4);\n\tR0=R1>=R0;\n\tR7=R7+4;\n\tI(R7)=R0;\n");
+          else
+            yyerror("0: operador no compatible");
+        }
+      }
+  | expresion IGUAL expresion
+      {
+        $$ = $1;
+        
+        if ($1->id[0] != $3->id[0])
+          yyerror("0: tipos no compatibles");
+        else {
+          if ($1->id[0] == 'f')
+            fprintf(obj, "\tRR0=D(R7);\n\tRR1=D(R7+8);\n\tR0=RR1==RR0;\n\tR7=R7+12;\n\tI(R7)=R0;\n");
+          else if ($1->id[0] == 'i')
+            fprintf(obj, "\tR0=I(R7);\n\tR1=I(R7+4);\n\tR0=R1==R0;\n\tR7=R7+4;\n\tI(R7)=R0;\n");
+          else
+            yyerror("0: operador no compatible");
+        }
+      }
+  | expresion DESIGUAL expresion
+      {
+        $$ = $1;
+        
+        if ($1->id[0] != $3->id[0])
+          yyerror("0: tipos no compatibles");
+        else {
+          if ($1->id[0] == 'f')
+            fprintf(obj, "\tRR0=D(R7);\n\tRR1=D(R7+8);\n\tR0=RR1!=RR0;\n\tR7=R7+12;\n\tI(R7)=R0;\n");
+          else if ($1->id[0] == 'i')
+            fprintf(obj, "\tR0=I(R7);\n\tR1=I(R7+4);\n\tR0=R1!=R0;\n\tR7=R7+4;\n\tI(R7)=R0;\n");
+          else
+            yyerror("0: operador no compatible");
+        }
+      }
+  | expresion AND expresion
+      {
+        $$ = $1;
+        
+        if ($1->id[0] != $3->id[0])
+          yyerror("0: tipos no compatibles");
+        else {
+          if ($1->id[0] == 'b')
+            fprintf(obj, "\tR0=I(R7);\n\tR1=I(R7+4);\n\tR0=R1&&R0;\n\tR7=R7+4;\n\tI(R7)=R0;\n");
+          else
+            yyerror("0: operador no compatible");
+        }
+      }
+  | expresion OR expresion
+      {
+        $$ = $1;
+        
+        if ($1->id[0] != $3->id[0])
+          yyerror("0: tipos no compatibles");
+        else {
+          if ($1->id[0] == 'b')
+            fprintf(obj, "\tR0=I(R7);\n\tR1=I(R7+4);\n\tR0=R1||R0;\n\tR7=R7+4;\n\tI(R7)=R0;\n");
+          else
+            yyerror("0: operador no compatible");
+        }
+      }
+  | '!' expresion
+      {
+        $$ = $2;
+
+        if ($2->id[0] == 'b')
+          fprintf(obj, "\tR0=I(R7);\n\tR0=!R0;\n\tI(R7)=R0;\n");
+        else
+          yyerror("0: operador no compatible");
+      }
+  | '(' expresion ')'
+      {
+        $$ = $2;
+      }
+  | ENTERO
+      { 
+        $$ = buscat("int", tipo);
+        fprintf(obj, "\tR7=R7-4;\n\tI(R7)=%d;\n", $1);
+      }
+  | REAL
       {
         $$ = buscat("float", tipo);
+        fprintf(obj, "\tR7=R7-8;\n\tD(R7)=%lf;\n", $1);
       }
-  | logico
+  | LOGICO                          
       {
         $$ = buscat("bool", tipo);
+        fprintf(obj, "\tR7=R7-4;\n\tI(R7)=%d;\n", $1);
+      }
+  | IDENTERO
+      {
+        struct reg *p = buscat($1, varl);
+
+        if (p!=NULL) {
+          $$ = p->tip;
+          
+          if (p->dir < 0)
+            fprintf(obj, "\tR0=I(R6%d);\n\tR7=R7-4;\n\tP(R7)=R0;\n", p->dir); // I y P ?? Lo dudo
+          else
+            fprintf(obj, "\tR0=I(R6+%d);\n\tR7=R7-4;\n\tP(R7)=R0;\n", p->dir); // I y P ?? Lo dudo
+        } else {
+          p = buscat($1,varg);
+          $$ = p->tip;
+
+          if (p!=NULL) 
+            fprintf(obj, "\tR0=I(0x%x);\n\tR7=R7-4;\n\tP(R7)=R0;\n", p->dir);
+          else 
+            yyerror("5: variable no declarada"); 
+        }
+      }
+  | IDREAL
+      {
+        struct reg *p = buscat($1, varl);
+
+        if (p!=NULL) {
+          $$ = p->tip;
+          
+          if (p->dir < 0)
+            fprintf(obj, "\tRR0=D(R6%d);\n\tR7=R7-8;\n\tD(R7)=RR0;\n", p->dir);
+          else
+            fprintf(obj, "\tRR0=D(R6+%d);\n\tR7=R7-8;\n\tD(R7)=RR0;\n", p->dir);
+        } else {
+          p = buscat($1,varg);
+          $$ = p->tip;
+          
+          if (p!=NULL) // añadir variante +
+            fprintf(obj, "\tRR0=D(0x%x);\n\tR7=R7-8;\n\tD(R7)=RR0;\n", p->dir);
+          else 
+            yyerror("5: variable no declarada"); 
+        }
+      }
+  | IDLOGICO
+      { 
+        struct reg *p = buscat($1, varl);
+
+        if (p!=NULL) {
+          $$ = p->tip;
+          
+          fprintf(obj, "\tR0=I(R6%d);\n\tR7=R7-4;\n\tP(R7)=R0;\n", p->dir);
+        } else {
+          p = buscat($1,varg);
+
+          if (p!=NULL) 
+            fprintf(obj, "\tR0=I(0x%x);\n\tR7=R7-4;\n\tP(R7)=R0;\n", p->dir);
+          else 
+            yyerror("5: variable no declarada"); 
+        }
+      }
+  | incdec
+      { // Mover codigo a asg-variable retornando en $$ el tamaño de tipo
+        $$ = buscat("int", tipo);
       }
   | exp-funcion
       {
@@ -459,7 +749,7 @@ expresion:
 
         if ($1->tip != voidp)
           if ($1->tip->id[0] == 'f')
-            fprintf(obj, "\tR7=R7-8;\n\tI(R7)=RR0;\n");
+            fprintf(obj, "\tR7=R7-8;\n\tD(R7)=RR0;\n");
           else
             fprintf(obj, "\tR7=R7-4;\n\tI(R7)=R0;\n");
         else
@@ -467,52 +757,8 @@ expresion:
       }
   ;
 
-entero:
-    entero '+' entero
-      {
-        fprintf(
-          obj, 
-          "\tR0=I(R7);\n\tR1=I(R7+4);\n\tR0=R1+R0;\n\tR7=R7+4;\n\tI(R7)=R0;\n"
-        );
-      }
-  | entero '-' entero
-      {
-        fprintf(
-          obj, 
-          "\tR0=I(R7);\n\tR1=I(R7+4);\n\tR0=R1-R0;\n\tR7=R7+4;\n\tI(R7)=R0;\n"
-        );
-      }
-  | entero '*' entero
-      {
-        fprintf(
-          obj, 
-          "\tR0=I(R7);\n\tR1=I(R7+4);\n\tR0=R1*R0;\n\tR7=R7+4;\n\tI(R7)=R0;\n"
-        );
-      }
-  | entero '/' entero
-      {
-        fprintf(
-          obj, 
-          "\tR0=I(R7);\n\tR1=I(R7+4);\n\tR0=R1/R0;\n\tR7=R7+4;\n\tI(R7)=R0;\n"
-        );
-      }
-  | entero '%' entero
-      {
-        fprintf(
-          obj, 
-          "\tR0=I(R7);\n\tR1=I(R7+4);\n\tR0=R1%cR0;\n\tR7=R7+4;\n\tI(R7)=R0;\n",
-          '%'
-        );
-      }
-  | entero POTENCIA entero
-  | '-' entero
-      {
-        fprintf(
-          obj, 
-          "\tR0=I(R7);\n\tR0=-R0;\n\tI(R7)=R0;\n"
-        );
-      }
-  | INCREMENTO IDENTERO
+incdec:
+   INCREMENTO IDENTERO
       {
         // Se busca la variable
         struct reg *p = buscat($2, varl);
@@ -599,258 +845,6 @@ entero:
           obj, 
           "\tR7=R7-4;\n\tI(R7)=R0;\n\tR0=R0-1;\n\tI(R1)=R0;\n"
         );
-      }
-  | '(' entero ')'
-  | ENTERO
-      { 
-        fprintf(obj, "\tR7=R7-4;\n\tI(R7)=%d;\n", $1);
-      }
-  | IDENTERO
-      {
-        struct reg *p = buscat($1, varl);
-
-        if (p!=NULL) 
-          if (p->dir < 0)
-            fprintf(obj, "\tR0=I(R6%d);\n\tR7=R7-4;\n\tP(R7)=R0;\n", p->dir); // I y P ?? Lo dudo
-          else
-            fprintf(obj, "\tR0=I(R6+%d);\n\tR7=R7-4;\n\tP(R7)=R0;\n", p->dir); // I y P ?? Lo dudo
-        else {
-          p = buscat($1,varg);
-
-          if (p!=NULL) 
-            fprintf(obj, "\tR0=I(0x%x);\n\tR7=R7-4;\n\tP(R7)=R0;\n", p->dir);
-          else 
-            yyerror("5: variable no declarada"); 
-        }
-      }
-  | exp-funcion
-      {
-        if ($1->tip != voidp)
-          if ($1->tip->id[0] == 'i')
-            fprintf(obj, "\tR7=R7-8;\n\tI(R7)=R0;\n");
-          else
-            yyerror("6: tipos no compatibles");
-        else
-          yyerror("7: rutina void no invocable en expresion");
-      }
-  ;
-
-real:
-    real '+' real
-      {
-        fprintf(
-          obj, 
-          "\tRR0=D(R7);\n\tRR1=D(R7+8);\n\tRR0=RR1+RR0;\n\tR7=R7+8;\n\tD(R7)=RR0;\n"
-        );
-      }
-  | real '-' real
-      {
-        fprintf(
-          obj, 
-          "\tRR0=D(R7);\n\tRR1=D(R7+8);\n\tRR0=RR1-RR0;\n\tR7=R7+8;\n\tD(R7)=RR0;\n"
-        );
-      }
-  | real '*' real
-      {
-        fprintf(
-          obj, 
-          "\tRR0=D(R7);\n\tRR1=D(R7+8);\n\tRR0=RR1*RR0;\n\tR7=R7+8;\n\tD(R7)=RR0;\n"
-        );
-      }
-  | real '/' real
-      {
-        fprintf(
-          obj, 
-          "\tRR0=D(R7);\n\tRR1=D(R7+8);\n\tRR0=RR1/RR0;\n\tR7=R7+8;\n\tD(R7)=RR0;\n"
-        );
-      }
-  | entero '/' entero
-      {
-        fprintf(
-          obj, 
-          "\tRR0=I(R7);\n\tRR1=I(R7+4);\n\tRR0=RR1/RR0;\n\tD(R7)=RR0;\n"
-        );
-      }
-  | real '%' real
-      {
-        fprintf(
-          obj, 
-          "\tRR0=D(R7);\n\tRR1=D(R7+8);\n\tRR0=RR1%cRR0;\n\tR7=R7+8;\n\tD(R7)=RR0;\n",
-          '%'
-        );
-      }
-  | real POTENCIA real
-  | '-' real
-      {
-        fprintf(
-          obj, 
-          "\tRR0=D(R7);\n\tRR0=-RR0;\n\tD(R7)=RR0;\n"
-        );
-      }
-  | INCREMENTO real
-      {
-        fprintf(
-          obj, 
-          "\tRR0=D(R7);\n\tRR0=RR0+1;\n\tD(R7)=RR0;\n"
-        );
-      }
-  | DECREMENTO real
-      {
-        fprintf(
-          obj, 
-          "\tRR0=D(R7);\n\tRR0=RR0-1;\n\tD(R7)=RR0;\n"
-        );
-      }
-  | '(' real ')'
-  | REAL
-      {
-        fprintf(obj, "\tR7=R7-8;\n\tD(R7)=%lf;\n", $1);
-      }
-  | IDREAL
-      {
-        struct reg *p = buscat($1, varl);
-
-        if (p!=NULL) 
-          if (p->dir < 0)
-            fprintf(obj, "\tRR0=D(R6%d);\n\tR7=R7-8;\n\tD(R7)=RR0;\n", p->dir);
-          else
-            fprintf(obj, "\tRR0=D(R6+%d);\n\tR7=R7-8;\n\tD(R7)=RR0;\n", p->dir);
-        else {
-          p = buscat($1,varg);
-
-          if (p!=NULL) // añadir variante +
-            fprintf(obj, "\tRR0=D(0x%x);\n\tR7=R7-8;\n\tD(R7)=RR0;\n", p->dir);
-          else 
-            yyerror("5: variable no declarada"); 
-        }
-      }
-  ;
-
-logico:
-    entero '<' entero
-      {
-        fprintf(
-          obj,
-          "\tR0=I(R7);\n\tR1=I(R7+4);\n\tR0=R1<R0;\n\tR7=R7+4;\n\tI(R7)=R0;\n"
-        );
-      }
-  | entero MNIG entero
-    {
-        fprintf(
-          obj,
-          "\tR0=I(R7);\n\tR1=I(R7+4);\n\tR0=R1<=R0;\n\tR7=R7+4;\n\tI(R7)=R0;\n"
-        );
-    }
-  | entero '>' entero
-    {
-        fprintf(
-          obj,
-          "\tR0=I(R7);\n\tR1=I(R7+4);\n\tR0=R1>R0;\n\tR7=R7+4;\n\tI(R7)=R0;\n"
-        );
-    }
-  | entero MYIG entero
-    {
-        fprintf(
-          obj,
-          "\tR0=I(R7);\n\tR1=I(R7+4);\n\tR0=R1>=R0;\n\tR7=R7+4;\n\tI(R7)=R0;\n"
-        );
-    }
-  | entero IGUAL entero
-    {
-        fprintf(
-          obj,
-          "\tR0=I(R7);\n\tR1=I(R7+4);\n\tR0=R1==R0;\n\tR7=R7+4;\n\tI(R7)=R0;\n"
-        );
-    }
-  | entero DESIGUAL entero
-      {
-        fprintf(
-          obj,
-          "\tR0=I(R7);\n\tR1=I(R7+4);\n\tR0=R1!=R0;\n\tR7=R7+4;\n\tI(R7)=R0;\n"
-        );
-      }
-  | real '<' real
-      {
-        fprintf(
-          obj,
-          "\tRR0=D(R7);\n\tRR1=D(R7+8);\n\tR0=RR1<RR0;\n\tR7=R7+12;\n\tI(R7)=R0;\n"
-        );
-      }
-  | real MNIG real
-    {
-        fprintf(
-          obj,
-          "\tRR0=D(R7);\n\tRR1=D(R7+8);\n\tR0=RR1<=RR0;\n\tR7=R7+12;\n\tI(R7)=R0;\n"
-        );
-    }
-  | real '>' real
-    {
-        fprintf(
-          obj,
-          "\tRR0=D(R7);\n\tRR1=D(R7+8);\n\tR0=RR1>RR0;\n\tR7=R7+12;\n\tI(R7)=R0;\n"
-        );
-    }
-  | real MYIG real
-    {
-        fprintf(
-          obj,
-          "\tRR0=D(R7);\n\tRR1=D(R7+8);\n\tR0=RR1>=RR0;\n\tR7=R7+12;\n\tI(R7)=R0;\n"
-        );
-    }
-  | real IGUAL real
-    {
-        fprintf(
-          obj,
-          "\tRR0=D(R7);\n\tRR1=D(R7+8);\n\tR0=RR1==RR0;\n\tR7=R7+12;\n\tI(R7)=R0;\n"
-        );
-    }
-  | real DESIGUAL real
-      {
-        fprintf(
-          obj,
-          "\tRR0=D(R7);\n\tRR1=D(R7+8);\n\tR0=RR1!=RR0;\n\tR7=R7+12;\n\tI(R7)=R0;\n"
-        );
-      }
-  | logico AND logico
-      {
-        fprintf(
-          obj,
-          "\tR0=I(R7);\n\tR1=I(R7+4);\n\tR0=R1&&R0;\n\tR7=R7+4;\n\tI(R7)=R0;\n"
-        );
-      }
-  | logico OR logico
-      {
-        fprintf(
-          obj,
-          "\tR0=I(R7);\n\tR1=I(R7+4);\n\tR0=R1||R0;\n\tR7=R7+4;\n\tI(R7)=R0;\n"
-        );
-      }
-  | '!' logico
-      {
-        fprintf(
-          obj,
-          "\tR0=I(R7);\n\tR0=!R0;\n\tI(R7)=R0;\n"
-        );
-      }
-  | '(' logico ')'
-  | LOGICO                          
-      {
-        fprintf(obj, "\tR7=R7-4;\n\tI(R7)=%d;\n", $1);
-      }
-  | IDLOGICO
-      { 
-        struct reg *p = buscat($1, varl);
-
-        if (p!=NULL) 
-          fprintf(obj, "\tR0=I(R6%d);\n\tR7=R7-4;\n\tP(R7)=R0;\n", p->dir);
-        else {
-          p = buscat($1,varg);
-
-          if (p!=NULL) 
-            fprintf(obj, "\tR0=I(0x%x);\n\tR7=R7-4;\n\tP(R7)=R0;\n", p->dir);
-          else 
-            yyerror("5: variable no declarada"); 
-        }
       }
   ;
 

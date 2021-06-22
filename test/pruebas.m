@@ -1,20 +1,9 @@
 
-int pow(int x, int y) {
-  if (y == 0)
-        return 1
-    else {
-      int t = pow(x, y/2)
-      
-      if (y%2 == 0)
-        return t * t
-      else
-        return x * t * t
-    }
+float sum(float x, float y) {
+  return x + y
 }
 
 {
-  int x = pow(5, 3) + 3
-  int y = 3
-  
-  println(x + y)
+  int i = i++
+  println(i)
 }
