@@ -1,7 +1,7 @@
-
 void f () {
   int k = 0
 }
+
 {
   int x = 0
   float i = 0.
