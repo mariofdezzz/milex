@@ -21,7 +21,7 @@ int fm;
 int et = 0;
 
 struct reg *voidp;
-struct reg *rp;
+struct reg *rp = NULL;
 
 void inits() {
   inst("void", 0);

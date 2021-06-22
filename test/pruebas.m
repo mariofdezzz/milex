@@ -13,8 +13,8 @@ int pow(int x, int y) {
 }
 
 {
-  int x = 5
+  int x = pow(5, 3) + 3
   int y = 3
   
-  println(pow(x, y))
+  println(x + y)
 }
