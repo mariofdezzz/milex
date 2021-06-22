@@ -8,7 +8,7 @@
 [ ] Comprobar concordancia de params entre exp y dcl de funcion
 [X] Comprobar concordancia de params entre exp y dcl de asignacion
 [X] Comprobar concordancia de params entre exp y dcl de return
-[ ] Comprobar ejemplos antes de enviar
+[X] Comprobar ejemplos antes de enviar
 [X] declaracion de globales utilizar dos valores en pila = valor + ptr mem
 [ ] return obligatorio
 [X] break y continue
