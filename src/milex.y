@@ -390,7 +390,7 @@ for:
 
         $<entero>$ = eb;
         eb = ++et;
-        fprintf(obj, "\tR0=I(R7);\n\tIF(!R0) GT(%d);\n", et);
+        fprintf(obj, "\tR0=I(R7);\n\tR7=R7+4;\n\tIF(!R0) GT(%d);\n", et);
       }
     ';'
       {
