@@ -331,7 +331,7 @@ if:
         $<entero>$ = ++et;
         fprintf(
           obj, 
-          "\tR0=I(R7);\n\tIF(!R0) GT(%d);\n",
+          "\tR0=I(R7);\n\tR7=R7+4;\n\tIF(!R0) GT(%d);\n",
           et
         );
       }
@@ -340,7 +340,7 @@ if:
 
 else: 
       {
-        fprintf(obj, "L %d:\tR7=R7+4;\n", $<entero>-1);
+        fprintf(obj, "L %d:\n", $<entero>-1);
       }
   | ELSE
       {
@@ -349,7 +349,7 @@ else:
       }
     sentbloq 
       {
-        fprintf(obj, "L %d:\tR7=R7+4;\n", $<entero>2);
+        fprintf(obj, "L %d:\n", $<entero>2);
       }
   ;
 
