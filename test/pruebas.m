@@ -1,7 +1,8 @@
 
 {
+  int j = 0
   for (int i = 0; i<10; i++) {
-    if (2. > 1.) continue
+    // j = 20
 
     println(i)
   }

@@ -277,7 +277,7 @@ asg-variable:
           if (t->id[0] == 'f')
             fprintf(obj, "\tRR0=D(R7);\n\tR1=P(R7+8);\n\tD(R1)=RR0;\n\tR7=R7+12;\n"); // !!
           else
-            fprintf(obj, "\tR0=I(R7);\n\tR1=P(R7+4);\n\tI(R1)=R0;\n\tR7=R7+4;\n");
+            fprintf(obj, "\tR0=I(R7);\n\tR1=P(R7+4);\n\tI(R1)=R0;\n\tR7=R7+8;\n");
         else
           yyerror("1.3: tipos no compatibles");
       }
@@ -316,7 +316,7 @@ asg-variable:
           if (t->id[0] == 'f')
             fprintf(obj, "\tRR0=D(R7);\n\tR1=P(R7+8);\n\tD(R1)=RR0;\n\tR7=R7+12;\n");
           else
-            fprintf(obj, "\tR0=I(R7);\n\tR1=P(R7+4);\n\tI(R1)=R0;\n\tR7=R7+4;\n");
+            fprintf(obj, "\tR0=I(R7);\n\tR1=P(R7+4);\n\tI(R1)=R0;\n\tR7=R7+8;\n");
         else
           yyerror("1.3: tipos no compatibles");
       }

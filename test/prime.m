@@ -24,5 +24,5 @@ void prime(int N) {
 }
 
 {
-  prime(60)
+  prime(23000)
 }
