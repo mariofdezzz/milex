@@ -1,3 +1,5 @@
+// Cálculo de los números primos desde 0 hasta N
+
 void prime(int N) {
   int i
   int j

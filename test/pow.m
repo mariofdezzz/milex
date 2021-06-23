@@ -1,3 +1,5 @@
+// Operación potencia
+
 int pow(int x, int y) {
   if (y == 0)
         return 1
