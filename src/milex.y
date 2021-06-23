@@ -133,6 +133,12 @@ sentencia:
   | exp-funcion
   | print
   | incdec
+      {
+        if ($1->id[0] == 'f')
+          fprintf(obj, "\tR7=R7+8;\n");
+        else
+          fprintf(obj, "\tR7=R7+4;\n");
+      }
   ;
 
 sentbloq:
@@ -408,6 +414,12 @@ for:
 end-for:
     asg-variable
   | incdec
+      {
+        if ($1->id[0] == 'f')
+          fprintf(obj, "\tR7=R7+8;\n");
+        else
+          fprintf(obj, "\tR7=R7+4;\n");
+      }
   ;
 
 print:

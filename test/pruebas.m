@@ -1,15 +1,8 @@
-void f () {
-  int k = 0
-}
 
 {
-  int x = 0
-  float i = 0.
-
-  println(++i)
-  println(i++)
-  println(i)
-  println(--i)
-  println(i--)
-  println(i)
+  for (int i = 0; i<10; i++) {
+    println(i)
+  }
+  float p = 0.
+  ++p
 }
