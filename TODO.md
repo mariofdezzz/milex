@@ -12,3 +12,4 @@
 [X] declaracion de globales utilizar dos valores en pila = valor + ptr mem
 [ ] return obligatorio
 [X] break y continue
+[ ] dcl-variable: Cambiar IDENTIF por id

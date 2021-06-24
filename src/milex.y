@@ -85,13 +85,9 @@ FILE *obj;
 %token <symbol> PRINT
 %token <symbol> PRINTLN
 
-// %type <exp> aritmetico
-// %type <exp> real
-// %type <exp> expr
 %type <rp> expresion
 %type <symbol> tipo
 %type <symbol> id
-// %type <entero> if
 %type <rp> exp-funcion
 %type <rp> incdec
 %type <entero> params-uso
@@ -159,7 +155,7 @@ est-control:
 
 dcl-variable:
     tipo IDENTIF
-      { // Cambiar IDENTIF por id
+      {
         struct reg *t = buscat($1, tipo);
 
         int d;
@@ -214,7 +210,7 @@ dcl-funcion:
         gl=varl;
       }
     params-declaracion ')' '{' bloque '}'
-      { // Incluir el return, parametros, recusividad
+      {
         rp = NULL;
         dump($2);
         finbloq();
@@ -275,7 +271,7 @@ asg-variable:
 
         if (t->id[0] == $<rp>2->tip->id[0])
           if (t->id[0] == 'f')
-            fprintf(obj, "\tRR0=D(R7);\n\tR1=P(R7+8);\n\tD(R1)=RR0;\n\tR7=R7+12;\n"); // !!
+            fprintf(obj, "\tRR0=D(R7);\n\tR1=P(R7+8);\n\tD(R1)=RR0;\n\tR7=R7+12;\n");
           else
             fprintf(obj, "\tR0=I(R7);\n\tR1=P(R7+4);\n\tI(R1)=R0;\n\tR7=R7+8;\n");
         else
@@ -379,7 +375,7 @@ while:
 
 for: 
     FOR '(' asg-variable ';'
-      { // Ampliar tipo de sentencias que caben aqui
+      {
         $<entero>$ = ++et;
         fprintf(obj, "L %d:\n", et);
       }
@@ -757,7 +753,7 @@ expresion:
           p = buscat($1,varg);
           $$ = p->tip;
           
-          if (p!=NULL) // añadir variante +
+          if (p!=NULL)
             fprintf(obj, "\tRR0=D(0x%x);\n\tR7=R7-8;\n\tD(R7)=RR0;\n", p->dir);
           else 
             yyerror("2.1: variable no declarada"); 
@@ -785,7 +781,7 @@ expresion:
         }
       }
   | incdec
-      { // Mover codigo a asg-variable retornando en $$ el tamaño de tipo
+      {
         $$ = $1;
       }
   | exp-funcion
